@@ -296,10 +296,7 @@ export const convertToPdfDescription: INodeProperties[] = [
 		name: 'conversionType',
 		type: 'options',
 		noDataExpression: true,
-		// The neutral default stays first so users can leave this optional selector unchanged.
-		// eslint-disable-next-line n8n-nodes-base/node-param-options-type-unsorted-items
 		options: [
-			{ name: 'Not Specified', value: '' },
 			{ name: 'CSV (.csv)', value: 'csv' },
 			{ name: 'HTML (.html)', value: 'html' },
 			{ name: 'JSON (.json)', value: 'json' },
@@ -307,6 +304,7 @@ export const convertToPdfDescription: INodeProperties[] = [
 			{ name: 'Microsoft Excel (.xls/.xlsx)', value: 'excel' },
 			{ name: 'Microsoft PowerPoint (.ppt/.pptx)', value: 'powerpoint' },
 			{ name: 'Microsoft Word (.doc/.docx)', value: 'word' },
+			{ name: 'Not Specified', value: '' },
 			{ name: 'Plain Text (.txt)', value: 'plainText' },
 			{ name: 'PostScript or EPS (.ps/.eps)', value: 'postscript' },
 			{ name: 'XML (.xml)', value: 'xml' },

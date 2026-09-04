@@ -219,41 +219,7 @@ publishing.
 Create a GitHub environment named `npm-production`. A required reviewer is
 recommended.
 
-As a one-time policy exception for the initial `0.1.0` release only, the npm
-organization owner creates a short-lived granular token with read/write access
-to the `@pdfrest` scope. Store it as `NPM_BOOTSTRAP_TOKEN` in the protected
-`npm-production` environment. Do not share the token with another maintainer or
-store it outside the environment.
-
-npm requires an interactive 2FA proof when this token creates the initial
-package. Immediately before the release, store one unused npm recovery code as
-`NPM_BOOTSTRAP_OTP` in the same protected environment. Do not store a TOTP seed
-in GitHub. A rotating authenticator code is not suitable because it can expire
-while the release gates run. Treat the recovery code as a single-use secret and
-delete it from GitHub after the publish attempt, whether the attempt succeeds or
-fails.
-
-The stable `v0.1.0` tag remains the only publish trigger, and the environment
-reviewer must approve the publish job. The publish step passes the token as
-`NODE_AUTH_TOKEN` and the recovery code as npm's `NPM_CONFIG_OTP` configuration
-only to `npm run release`. The n8n node CLI preserves both variables when it
-invokes `npm publish`, publishes from the GitHub-hosted runner with provenance
-enabled, and uses the public access configured in `package.json`. The workflow
-rejects this bootstrap path for any version other than `0.1.0`.
-
-If npm reports an OTP browser URL, do not copy, expose, or attempt to unmask it
-from a GitHub Actions log. That escalation flow is intended for an interactive
-CLI session and is not the release workflow's authentication mechanism. Supply
-the protected `NPM_BOOTSTRAP_OTP` secret before approving the `npm-production`
-job instead.
-
-Immediately after `0.1.0` is visible in npm, verify its public access and
-provenance, configure npm trusted publishing as described below, revoke the
-granular token, delete `NPM_BOOTSTRAP_TOKEN` and `NPM_BOOTSTRAP_OTP` from
-GitHub, and remove the bootstrap-only credential environment from `publish.yml`.
-Complete those steps before creating another release tag.
-
-After the package exists, configure npm trusted publishing for:
+Configure npm trusted publishing for:
 
 - GitHub organization or user: the owner of this repository
 - Repository: `n8n-nodes-pdfrest`
@@ -261,26 +227,28 @@ After the package exists, configure npm trusted publishing for:
 - Environment: `npm-production`
 - Allowed action: `npm publish`
 
-The publish job uses a GitHub-hosted runner, npm 11.19.0, and
-`id-token: write`. The initial release uses only the approved bootstrap token
-and single-use 2FA proof; later releases use OIDC trusted publishing with no
-token fallback. Both paths publish with provenance and public access. After the
-package is visible in the registry, the job runs the pinned n8n community
-package scanner against that exact version and explicitly fails unless the
-scanner reports success.
+The publish job uses a GitHub-hosted runner, npm 11.19.0, and `id-token: write`
+to authenticate exclusively through OIDC trusted publishing. Do not configure
+an npm publishing token or OTP in GitHub. The n8n node CLI publishes with
+provenance and the public access configured in `package.json`.
 
-Before creating the initial release tag, both parts of the release ownership
-gate must be confirmed:
+After the publish command succeeds, the job allows up to 20 minutes for npm's
+publish-time scan to make the version visible in the registry. The publish job
+has a 35-minute deadline so the pinned n8n community package scanner can then
+check that exact version. The job explicitly fails unless the scanner reports
+success.
+
+Before creating a release tag, both parts of the release ownership gate must be
+confirmed:
 
 - The npm organization owner has granted the designated release maintainer the
-  required organization access and configured the short-lived bootstrap token
-  and single-use 2FA proof.
+  required organization access and configured the npm trusted publisher.
 - The designated release maintainer has configured and tested the GitHub
   Actions publishing automation.
 
-For later releases, missing npm ownership, trusted-publisher configuration,
-GitHub environment permissions, or provenance is a release blocker. Do not add
-another token fallback or publish from a developer machine.
+Missing npm ownership, trusted-publisher configuration, GitHub environment
+permissions, or provenance is a release blocker. Do not add a token fallback or
+publish from a developer machine.
 
 Prepare a version change through the normal pull-request process. After it is
 merged and all CI checks pass, tag that exact commit and push the tag:

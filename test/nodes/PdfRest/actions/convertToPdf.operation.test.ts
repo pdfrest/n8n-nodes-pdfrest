@@ -132,7 +132,6 @@ describe('Convert to PDF operation', () => {
 			type: 'options',
 			noDataExpression: true,
 			options: [
-				{ name: 'Not Specified', value: '' },
 				{ name: 'CSV (.csv)', value: 'csv' },
 				{ name: 'HTML (.html)', value: 'html' },
 				{ name: 'JSON (.json)', value: 'json' },
@@ -140,6 +139,7 @@ describe('Convert to PDF operation', () => {
 				{ name: 'Microsoft Excel (.xls/.xlsx)', value: 'excel' },
 				{ name: 'Microsoft PowerPoint (.ppt/.pptx)', value: 'powerpoint' },
 				{ name: 'Microsoft Word (.doc/.docx)', value: 'word' },
+				{ name: 'Not Specified', value: '' },
 				{ name: 'Plain Text (.txt)', value: 'plainText' },
 				{ name: 'PostScript or EPS (.ps/.eps)', value: 'postscript' },
 				{ name: 'XML (.xml)', value: 'xml' },

@@ -34,7 +34,7 @@ describe('createInputSourceFields', () => {
 	it('creates any configured combination of input sources', () => {
 		const fields = createInputSourceFields({
 			operation: 'upload',
-			sources: ['url', 'file'],
+			sources: ['file', 'url'],
 			url: { requestFormat: 'multipart' },
 		});
 

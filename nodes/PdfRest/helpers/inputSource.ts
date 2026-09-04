@@ -29,7 +29,7 @@ interface UrlInputOptions {
 interface InputSourceOptions {
 	file?: FileInputOptions;
 	operation: string;
-	sources?: InputSource[];
+	sources?: ['file', ...InputSource[]];
 	url?: UrlInputOptions;
 }
 
@@ -78,38 +78,38 @@ export function createInputFileFields({
 		},
 	};
 
-	return [
-		// eslint-disable-next-line n8n-nodes-base/node-param-default-missing
-		{
-			displayName: inputDataFieldDisplayName,
-			name: inputDataFieldName,
-			type: 'string',
-			typeOptions: fileSupportsMultipleValues
-				? {
-						multipleValues: true,
-						multipleValueButtonText,
-					}
-				: undefined,
-			default: fileSupportsMultipleValues ? ['data'] : 'data',
-			required: true,
-			displayOptions,
-			description: inputFileDescription,
-			routing: {
-				send: {
-					type: 'body',
-					property: fileFieldName,
-					preSend: [
-						(file.deferUpload
-							? createDeferredMultipartUploadPreSend
-							: createMultipartUploadPreSend)({
-							binaryDataPropertyNameParameter: inputDataFieldName,
-							fileFieldName,
-						}),
-					],
-				},
+	const inputFileField = {
+		displayName: inputDataFieldDisplayName,
+		name: inputDataFieldName,
+		type: 'string' as const,
+		required: true,
+		displayOptions,
+		description: inputFileDescription,
+		routing: {
+			send: {
+				type: 'body' as const,
+				property: fileFieldName,
+				preSend: [
+					(file.deferUpload
+						? createDeferredMultipartUploadPreSend
+						: createMultipartUploadPreSend)({
+						binaryDataPropertyNameParameter: inputDataFieldName,
+						fileFieldName,
+					}),
+				],
 			},
 		},
-	];
+	};
+
+	return fileSupportsMultipleValues
+		? [
+				{
+					...inputFileField,
+					typeOptions: { multipleValues: true, multipleValueButtonText },
+					default: ['data'],
+				},
+			]
+		: [{ ...inputFileField, default: 'data' }];
 }
 
 /**
@@ -139,52 +139,55 @@ export function createInputSourceFields({
 		url: { name: 'URL', value: 'url' },
 	};
 	const inputTypeOptions = sources.map((source) => sourceOptions[source]);
+	const urlInputField = {
+		displayName: urlDisplayName,
+		name: urlParameterName,
+		type: 'string' as const,
+		required: true,
+		placeholder: 'https://example.com/document.pdf',
+		displayOptions: {
+			show: {
+				operation: [operation],
+				inputType: ['url'],
+			},
+		},
+		description: 'A publicly accessible URL for the file',
+		routing: {
+			send: {
+				type: 'body' as const,
+				property: urlParameterName,
+				...(urlRequestFormat === 'multipart'
+					? { preSend: [createMultipartFormDataPreSend()] }
+					: {}),
+			},
+		},
+	};
 	const urlInputFields: INodeProperties[] = hasUrlInput
-		? [
-				// eslint-disable-next-line n8n-nodes-base/node-param-default-missing
-				{
-					displayName: urlDisplayName,
-					name: urlParameterName,
-					type: 'string',
-					typeOptions: urlSupportsMultipleValues
-						? {
-								multipleValues: true,
-								multipleValueButtonText: 'Add URL',
-							}
-						: undefined,
-					default: urlSupportsMultipleValues ? [] : '',
-					required: true,
-					placeholder: 'https://example.com/document.pdf',
-					displayOptions: {
-						show: {
-							operation: [operation],
-							inputType: ['url'],
-						},
+		? urlSupportsMultipleValues
+			? [
+					{
+						...urlInputField,
+						typeOptions: { multipleValues: true, multipleValueButtonText: 'Add URL' },
+						default: [],
 					},
-					description: 'A publicly accessible URL for the file',
-					routing: {
-						send: {
-							type: 'body',
-							property: urlParameterName,
-							...(urlRequestFormat === 'multipart'
-								? { preSend: [createMultipartFormDataPreSend()] }
-								: {}),
-						},
+				]
+			: [
+					{
+						...urlInputField,
+						default: '',
 					},
-				},
-			]
+				]
 		: [];
 	const fileInputFields = hasFileInput ? createInputFileFields({ file, operation }) : [];
 
 	return [
-		// eslint-disable-next-line n8n-nodes-base/node-param-default-missing
 		{
 			displayName: 'Input Source',
 			name: 'inputType',
 			type: 'options',
 			noDataExpression: true,
 			options: inputTypeOptions,
-			default: inputTypeOptions[0].value,
+			default: 'inputFile',
 			displayOptions: {
 				show: {
 					operation: [operation],
