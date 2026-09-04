@@ -35,7 +35,7 @@ The public node display name is `pdfRest API Toolkit`. Do not shorten it to
 
 ## Release ownership gate
 
-Before the first release, confirm that:
+Before each release, confirm that:
 
 - The repository maintainers have granted the repository workflow the required
   ownership and publishing access in the npm organization.
@@ -45,12 +45,10 @@ Before the first release, confirm that:
   provenance.
 
 Treat missing npm organization ownership, repository permissions, Actions
-authorization, or provenance as a release blocker. As a one-time policy
-exception, the initial `0.1.0` release may use the explicitly approved
-short-lived granular bootstrap token documented in `docs/ci.md`; revoke it and
-switch to OIDC trusted publishing immediately afterward. Do not add an ongoing
-token fallback or publish locally. The bootstrap path must be removed prior to
-future releases.
+authorization, or provenance as a release blocker. The initial `0.1.0` release
+was the sole permitted bootstrap-token exception. That path is closed and must
+not be restored; all subsequent releases must use OIDC trusted publishing. Do
+not add a token fallback or publish locally.
 
 ## CI conventions
 
@@ -91,10 +89,10 @@ future releases.
   deadline documented in `docs/ci.md`.
 - Publish only from the stable `vMAJOR.MINOR.PATCH` tag workflow when the tag
   matches `package.json`, static and live gates pass, and the protected npm
-  environment authorizes publishing with provenance. Only the initial `0.1.0`
-  release may use the documented short-lived bootstrap token; later releases
-  must use OIDC trusted publishing. Do not add another publish trigger or an
-  ongoing npm token fallback.
+  environment authorizes publishing with provenance. The initial `0.1.0`
+  release was the only permitted bootstrap-token exception; all later releases
+  must use OIDC trusted publishing. Do not add another publish trigger or a
+  token fallback.
 
 ## Node implementation rules
 

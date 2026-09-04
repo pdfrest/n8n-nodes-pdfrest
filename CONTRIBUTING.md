@@ -164,5 +164,5 @@ contents; update both `package.json` and `package-lock.json`. The current
 `0.1.1` version is the next patch release. See the
 [versioning policy](docs/ci.md#versioning-policy) for later releases.
 
-Release ownership, npm bootstrap, environment setup, and tag conventions are
-documented in the [CI and release runbook](docs/ci.md).
+Release ownership, npm trusted publishing, environment setup, and tag
+conventions are documented in the [CI and release runbook](docs/ci.md).
