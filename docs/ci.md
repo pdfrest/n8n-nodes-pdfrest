@@ -221,23 +221,37 @@ recommended.
 
 As a one-time policy exception for the initial `0.1.0` release only, the npm
 organization owner creates a short-lived granular token with read/write access
-to the `@pdfrest` scope and bypass-2FA permission. Store it as
-`NPM_BOOTSTRAP_TOKEN` in the protected `npm-production` environment. Do not
-share the token with another maintainer or store it outside the environment.
-The stable `v0.1.0` tag remains the only publish trigger, and the environment
-reviewer must approve the publish job.
+to the `@pdfrest` scope. Store it as `NPM_BOOTSTRAP_TOKEN` in the protected
+`npm-production` environment. Do not share the token with another maintainer or
+store it outside the environment.
 
-The publish step passes this token only to `npm run release`. The n8n node CLI
-publishes from the GitHub-hosted runner with provenance enabled, and
-`package.json` sets the scoped package's access to public. This token is a
-one-time policy exception, not an ongoing authentication fallback.
-The bootstrap path must be removed prior to future releases.
+npm requires an interactive 2FA proof when this token creates the initial
+package. Immediately before the release, store one unused npm recovery code as
+`NPM_BOOTSTRAP_OTP` in the same protected environment. Do not store a TOTP seed
+in GitHub. A rotating authenticator code is not suitable because it can expire
+while the release gates run. Treat the recovery code as a single-use secret and
+delete it from GitHub after the publish attempt, whether the attempt succeeds or
+fails.
+
+The stable `v0.1.0` tag remains the only publish trigger, and the environment
+reviewer must approve the publish job. The publish step passes the token as
+`NODE_AUTH_TOKEN` and the recovery code as npm's `NPM_CONFIG_OTP` configuration
+only to `npm run release`. The n8n node CLI preserves both variables when it
+invokes `npm publish`, publishes from the GitHub-hosted runner with provenance
+enabled, and uses the public access configured in `package.json`. The workflow
+rejects this bootstrap path for any version other than `0.1.0`.
+
+If npm reports an OTP browser URL, do not copy, expose, or attempt to unmask it
+from a GitHub Actions log. That escalation flow is intended for an interactive
+CLI session and is not the release workflow's authentication mechanism. Supply
+the protected `NPM_BOOTSTRAP_OTP` secret before approving the `npm-production`
+job instead.
 
 Immediately after `0.1.0` is visible in npm, verify its public access and
 provenance, configure npm trusted publishing as described below, revoke the
-granular token, delete `NPM_BOOTSTRAP_TOKEN` from GitHub, and remove the
-bootstrap-only token environment from `publish.yml`. Complete those steps
-before creating another release tag.
+granular token, delete `NPM_BOOTSTRAP_TOKEN` and `NPM_BOOTSTRAP_OTP` from
+GitHub, and remove the bootstrap-only credential environment from `publish.yml`.
+Complete those steps before creating another release tag.
 
 After the package exists, configure npm trusted publishing for:
 
@@ -248,17 +262,19 @@ After the package exists, configure npm trusted publishing for:
 - Allowed action: `npm publish`
 
 The publish job uses a GitHub-hosted runner, npm 11.19.0, and
-`id-token: write`. The initial release uses only the approved bootstrap token;
-later releases use OIDC trusted publishing with no token fallback. Both paths
-publish with provenance and public access. After the package is visible in the
-registry, the job runs the pinned n8n community package scanner against that
-exact version and explicitly fails unless the scanner reports success.
+`id-token: write`. The initial release uses only the approved bootstrap token
+and single-use 2FA proof; later releases use OIDC trusted publishing with no
+token fallback. Both paths publish with provenance and public access. After the
+package is visible in the registry, the job runs the pinned n8n community
+package scanner against that exact version and explicitly fails unless the
+scanner reports success.
 
 Before creating the initial release tag, both parts of the release ownership
 gate must be confirmed:
 
 - The npm organization owner has granted the designated release maintainer the
-  required organization access and configured the short-lived bootstrap token.
+  required organization access and configured the short-lived bootstrap token
+  and single-use 2FA proof.
 - The designated release maintainer has configured and tested the GitHub
   Actions publishing automation.
 
