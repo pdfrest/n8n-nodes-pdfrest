@@ -265,9 +265,11 @@ The publish job uses a GitHub-hosted runner, npm 11.19.0, and
 `id-token: write`. The initial release uses only the approved bootstrap token
 and single-use 2FA proof; later releases use OIDC trusted publishing with no
 token fallback. Both paths publish with provenance and public access. After the
-package is visible in the registry, the job runs the pinned n8n community
-package scanner against that exact version and explicitly fails unless the
-scanner reports success.
+publish command succeeds, the job allows up to 20 minutes for npm's publish-time
+scan to make the version visible in the registry. The publish job has a
+35-minute deadline so the pinned n8n community package scanner can then check
+that exact version. The job explicitly fails unless the scanner reports
+success.
 
 Before creating the initial release tag, both parts of the release ownership
 gate must be confirmed:
