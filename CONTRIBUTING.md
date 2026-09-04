@@ -161,7 +161,7 @@ a personal-token fallback.
 Feature and fix pull requests do not change the package version. Prepare the
 SemVer change in a dedicated release pull request after selecting the release
 contents; update both `package.json` and `package-lock.json`. The current
-`0.1.0` version is the intended first release. See the
+`0.1.1` version is the next patch release. See the
 [versioning policy](docs/ci.md#versioning-policy) for later releases.
 
 Release ownership, npm bootstrap, environment setup, and tag conventions are
