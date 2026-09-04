@@ -178,27 +178,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # One-time policy exception for v0.1.0 only: npm cannot authorize trusted
-      # publishing until the package exists. The initial package creation needs
-      # a short-lived write token plus an interactive 2FA proof. Remove both
-      # secrets and configure npm OIDC trusted publishing immediately afterward.
-      - name: Publish initial package with bootstrap credentials
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
-          NPM_CONFIG_OTP: ${{ secrets.NPM_BOOTSTRAP_OTP }}
-          PACKAGE_VERSION: ${{ needs.validate-tag.outputs.version }}
-        run: |
-          if [[ "$PACKAGE_VERSION" != "0.1.0" ]]; then
-            echo 'Bootstrap publishing is allowed only for version 0.1.0' >&2
-            exit 1
-          fi
-
-          if [[ -z "$NODE_AUTH_TOKEN" || -z "$NPM_CONFIG_OTP" ]]; then
-            echo 'The npm bootstrap token and 2FA proof are not configured' >&2
-            exit 1
-          fi
-
-          npm run release
+      - name: Publish package with npm trusted publishing
+        run: npm run release
 
       - name: Wait for registry visibility
         env:
