@@ -1,0 +1,5003 @@
+{
+  "name": "pdfRest Test All Endpoints Multipart Upload",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        208
+      ],
+      "id": "79b49d3d-4779-4fba-87c2-f853fd02990f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/forms/*",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        11584
+      ],
+      "id": "b6b8aae5-042f-4e8f-a3bb-8e360c9f2026",
+      "name": "Read Files From Disk for Import/Export Form Data"
+    },
+    {
+      "parameters": {
+        "operation": "importFormData",
+        "formDataFileDataFieldName": "data_1",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        11584
+      ],
+      "id": "c0c7f0e0-7a77-4e48-aa15-32b7411f42a1",
+      "name": "Import Form Data into PDF",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "exportFormData",
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.outputId }}",
+        "dataFormat": "xfdf",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        11584
+      ],
+      "id": "66f8054c-6bea-4ca9-b7f6-4f8c4af4b7a6",
+      "name": "Export Form Data from PDF",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        11584
+      ],
+      "id": "a848f14a-3d0f-46bf-9e63-0993dbf40ed9",
+      "name": "Aggregate Files for Import/Export Form Data Upload"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/01-sample-pdf.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        208
+      ],
+      "id": "0023c01d-855f-4ff8-93b0-bf98605548a8",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "options": {
+          "pageRanges": [
+            "1-2"
+          ]
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        208
+      ],
+      "id": "ed5c69c4-fc16-466e-b66f-ca1abcd4e4c9",
+      "name": "Split a document",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        208
+      ],
+      "id": "d21ed335-ffaf-47ae-987c-01caa5ddff0b",
+      "name": "Record Split a document Result"
+    },
+    {
+      "parameters": {
+        "operation": "translate",
+        "outputLanguage": "es",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        592
+      ],
+      "id": "6ebcb216-ea08-4eba-a02d-14a78fb6c48b",
+      "name": "Translate PDF Text",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        592
+      ],
+      "id": "91b2a691-0113-45f7-bac0-c72806cf296a",
+      "name": "Record Translate PDF Text Result"
+    },
+    {
+      "parameters": {
+        "operation": "pdfInfo",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        784
+      ],
+      "id": "142c3aed-9c87-491f-ab73-c0843ded7139",
+      "name": "Query PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        784
+      ],
+      "id": "f9a52522-9ece-4bfb-970b-12bc2c91d880",
+      "name": "Record Query PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "summarize",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        976
+      ],
+      "id": "23c9b3a2-c183-4883-b33e-e62c74147599",
+      "name": "Summarize PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        976
+      ],
+      "id": "747ee8a5-c53e-45c1-9593-82a1696eb1bd",
+      "name": "Record Summarize PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "extractImages",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        1168
+      ],
+      "id": "2060d8df-e4cf-429c-af0f-e86ce0a8cba5",
+      "name": "Extract Images",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        1168
+      ],
+      "id": "b4f75e38-f4ee-420e-8c10-37a54da1ab7f",
+      "name": "Record Extract Images Result"
+    },
+    {
+      "parameters": {
+        "operation": "extractText",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        1360
+      ],
+      "id": "5894a8f5-2857-4823-92a7-d7eff368b67f",
+      "name": "Extract Text",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        1360
+      ],
+      "id": "dc4dd103-ad11-4495-9a58-84dc8b67170d",
+      "name": "Record Extract Text Result"
+    },
+    {
+      "parameters": {
+        "operation": "ocr",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        1552
+      ],
+      "id": "630f3ac9-ad58-4aed-ad3a-302c9fb859ad",
+      "name": "OCR PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        1552
+      ],
+      "id": "4b6d0f45-8f8d-46c6-9540-1a1acaab3976",
+      "name": "Record OCR PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertWord",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        1744
+      ],
+      "id": "ed67a42f-ebac-4e7e-8d9e-ee7ecf94d20f",
+      "name": "Convert PDF to Word",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        1744
+      ],
+      "id": "32088adb-877a-4041-ad89-c058de2bde21",
+      "name": "Record Convert PDF to Word Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertExcel",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        1936
+      ],
+      "id": "ca0d5a2b-7639-41df-bac8-d5bd13c2cfc8",
+      "name": "Convert to Excel",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        1936
+      ],
+      "id": "4f440dc8-b791-46ab-9205-8dcb871fdf51",
+      "name": "Record Convert to Excel Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertPowerPoint",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        2128
+      ],
+      "id": "6d94de94-ab03-42ee-b9e5-4bc8b3ddc178",
+      "name": "Convert PDF to PowerPoint",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        2128
+      ],
+      "id": "67f08345-8578-49e2-af73-ffbb96a7408b",
+      "name": "Record Convert PDF to PowerPoint Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertBmp",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        2320
+      ],
+      "id": "8bd19f0c-7295-4c2c-b1a6-f110ba69879c",
+      "name": "Convert PDF to BMP",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        2320
+      ],
+      "id": "02c509f9-dd29-4fbc-b059-77c194477888",
+      "name": "Record Convert PDF to BMP Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertGif",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        2512
+      ],
+      "id": "2ea352e8-1a1f-4360-bec6-2a8e70e6f501",
+      "name": "Convert PDF to GIF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        2512
+      ],
+      "id": "88fb557d-4ece-4280-ac6e-d4e80b9c12a1",
+      "name": "Record Convert PDF to GIF Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertJpg",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        2704
+      ],
+      "id": "5109e773-e3fa-4350-98a9-88e10857e192",
+      "name": "Convert PDF to JPEG",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        2704
+      ],
+      "id": "c679e520-7f45-4e91-ba4b-e16e722fc62e",
+      "name": "Record Convert PDF to JPEG Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertPng",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        2896
+      ],
+      "id": "7bf85282-d5d9-4c1d-808e-a8b41c6fd0ea",
+      "name": "Convert PDF to PNG",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        2896
+      ],
+      "id": "718cff7d-8774-488b-a018-0d1c0ae0fbf7",
+      "name": "Record Convert PDF to PNG Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertTif",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        3088
+      ],
+      "id": "b410eb6c-4ea6-4078-b4af-cf37a75c7aa8",
+      "name": "Convert PDF to TIFF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        3088
+      ],
+      "id": "fc5546d7-7871-473c-896e-9351c87756ae",
+      "name": "Record Convert PDF to TIFF Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertMarkdown",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        3280
+      ],
+      "id": "7e81d4c2-afed-4cb6-b4df-5820a742aaf5",
+      "name": "Convert PDF to Markdown",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        3280
+      ],
+      "id": "fcdf3aae-a767-459a-a4b7-65ee5356defc",
+      "name": "Record Convert PDF to Markdown Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertPdfX",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        3664
+      ],
+      "id": "248c710e-69ca-4aa2-8889-baf4b8ce1839",
+      "name": "Convert PDF to PDF/X",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        3664
+      ],
+      "id": "40282b9a-d676-4b64-acea-ed4bf3997ae6",
+      "name": "Record Convert PDF to PDF/X Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertPdfA",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        3472
+      ],
+      "id": "cdee0357-d4b8-4491-a5a2-5779374517f3",
+      "name": "Convert PDF to PDF/A",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        3472
+      ],
+      "id": "4b113a0b-2950-4b25-9ef2-565b02e44710",
+      "name": "Record Convert PDF to PDF/A Result"
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        3856
+      ],
+      "id": "41e1e3bb-b561-44bf-ac75-ce2e81acb452",
+      "name": "Compress PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        3856
+      ],
+      "id": "fc12d685-ed6b-45c0-8f60-dd694fbd076d",
+      "name": "Record Compress PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "watermark",
+        "watermarkText": "pdfRest",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        4048
+      ],
+      "id": "5e4a169d-6331-41cc-88ee-1576eed571cb",
+      "name": "Watermark PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        4048
+      ],
+      "id": "01a36312-4432-45f0-9f34-61442314842d",
+      "name": "Record Watermark PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "tdmReserved",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        4240
+      ],
+      "id": "b82b9219-9a72-41da-b1d1-f8649837056a",
+      "name": "Reserve PDF for TDM",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        4240
+      ],
+      "id": "567f1315-5c11-4619-bef0-5b307c98edd3",
+      "name": "Record Reserve PDF for TDM Result"
+    },
+    {
+      "parameters": {
+        "operation": "addText",
+        "textObjects": "[{\"font\":\"Arial\",\"max_width\":\"160\",\"opacity\":\"1\",\"page\":\"1\",\"rotation\":\"0\",\"text\":\"pdfRest\",\"text_color_rgb\":\"0,0,0\",\"text_size\":\"12\",\"x\":\"144\",\"y\":\"144\"}]",
+        "options": {
+          "includeFileInfo": false,
+          "tagEnabled": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        4432
+      ],
+      "id": "c710fa40-8ed5-42fc-a4c7-532bc130020f",
+      "name": "Add Text to PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        4432
+      ],
+      "id": "bd913674-1a69-4b27-958b-cd6abfb43bad",
+      "name": "Record Add Text to PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "addShapes",
+        "shapeObjects": "{\"type\":\"line\",\"page\":1,\"x1\":72,\"y1\":576,\"x2\":540,\"y2\":576}",
+        "options": {
+          "includeFileInfo": false,
+          "tagEnabled": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        4624
+      ],
+      "id": "fb8dd47c-65b5-45ed-b50a-af6a1b842d56",
+      "name": "Add Shapes to PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        4624
+      ],
+      "id": "f66d18ee-1902-4f65-bbe2-ce778f2f173a",
+      "name": "Record Add Shapes to PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "addTables",
+        "options": {
+          "includeFileInfo": false,
+          "tagEnabled": true
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        4816
+      ],
+      "id": "c04f633d-90a5-4013-ac46-c3e2099db326",
+      "name": "Add Tables to PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        4816
+      ],
+      "id": "bfee162d-bf93-47d6-92f4-264e814ecb84",
+      "name": "Record Add Tables to PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "setPageBoxes",
+        "pageBoxDefinitions": "{\"boxes\":[{\"box\":\"crop\",\"pages\":[{\"range\":\"all\",\"top\":36,\"bottom\":36,\"left\":72,\"right\":72}]}]}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        5008
+      ],
+      "id": "fbea0fc5-59c1-4210-ac2d-4dc84c56b115",
+      "name": "Set PDF Page Boxes",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        5008
+      ],
+      "id": "144f83d2-c934-480c-9533-9bc7fa387bec",
+      "name": "Record Set PDF Page Boxes Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertColors",
+        "colorProfile": "srgb",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        5200
+      ],
+      "id": "ecc030af-f4ad-4eba-93f6-8c41464e4dfa",
+      "name": "Convert PDF Colors",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        5200
+      ],
+      "id": "e0890dcb-02bc-473d-b9ee-7147304c96e7",
+      "name": "Record Convert PDF Colors Result"
+    },
+    {
+      "parameters": {
+        "operation": "rasterize",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        5392
+      ],
+      "id": "8dbc9f61-ef22-4158-93c3-ba04cb8c455f",
+      "name": "Rasterize PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        5392
+      ],
+      "id": "2a26e78b-0c8d-42f9-a632-a016b2201df4",
+      "name": "Record Rasterize PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "linearize",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        5584
+      ],
+      "id": "f3e2d35f-f0e8-4367-b391-efcbd90087f2",
+      "name": "Linearize PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        5584
+      ],
+      "id": "e8e58da9-cc48-4833-a176-9b6c41718c7d",
+      "name": "Record Linearize PDF Result"
+    },
+    {
+      "parameters": {
+        "operation": "convertXfaToAcroforms",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        5776
+      ],
+      "id": "917f074a-1301-4681-b996-d1f4c2e08ddd",
+      "name": "Convert XFA to AcroForms",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        5776
+      ],
+      "id": "c42eb676-4b0e-4d15-accb-199a1e90c25a",
+      "name": "Record Convert XFA to AcroForms Result"
+    },
+    {
+      "parameters": {
+        "operation": "flattenForms",
+        "options": {
+          "includeFileInfo": false,
+          "asPrinted": "false"
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        5968
+      ],
+      "id": "13ebfc4a-2637-4c6c-af4e-654e264b3fc5",
+      "name": "Flatten PDF Forms",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        5968
+      ],
+      "id": "6dfc5eb5-0a35-4980-9dcf-2dc536a54daf",
+      "name": "Record Flatten PDF Forms Result"
+    },
+    {
+      "parameters": {
+        "operation": "flattenTransparencies",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        6160
+      ],
+      "id": "056eeb98-1d87-4d4a-9ee4-b2c00a51d092",
+      "name": "Flatten PDF Transparencies",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        6160
+      ],
+      "id": "51dd7c45-4466-410a-960a-2fe04f56ec49",
+      "name": "Record Flatten PDF Transparencies Result"
+    },
+    {
+      "parameters": {
+        "operation": "flattenAnnotations",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        6352
+      ],
+      "id": "d84141e7-07cc-4a56-b2d7-0116feef0614",
+      "name": "Flatten PDF Annotations",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        6352
+      ],
+      "id": "0570322c-2b9a-462c-bc5f-5ad3874fd17e",
+      "name": "Record Flatten PDF Annotations Result"
+    },
+    {
+      "parameters": {
+        "operation": "flattenLayers",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        6544
+      ],
+      "id": "1e5fc5b1-4c45-4f88-8a1d-ef0cf2786700",
+      "name": "Flatten PDF Layers",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        6544
+      ],
+      "id": "b72f0d4d-c2fc-4e5b-a2ef-38719aef4d1b",
+      "name": "Record Flatten PDF Layers Result"
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -224,
+        864
+      ],
+      "id": "fd2ca9c2-2b4c-4d99-9288-eaec7c9d63ae",
+      "name": "Merge Single-Input Results 1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -224,
+        2800
+      ],
+      "id": "fc700d31-6785-452f-81e1-4b48659b246e",
+      "name": "Merge Single-Input Results 2"
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -224,
+        4720
+      ],
+      "id": "63365600-f730-4fe0-b1ba-c6413c7fcc47",
+      "name": "Merge Single-Input Results 3"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -224,
+        6016
+      ],
+      "id": "885e5324-8b7e-4211-87c8-2f2d5e994e28",
+      "name": "Merge Single-Input Results 4"
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        4432
+      ],
+      "id": "b2914671-1bda-46b7-8d95-4fde05cc4ef2",
+      "name": "Merge All Workflow Results"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "error",
+              "renameField": true,
+              "outputFieldName": "errors"
+            }
+          ]
+        },
+        "options": {
+          "includeBinaries": false,
+          "keepMissing": false
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        224,
+        4432
+      ],
+      "id": "4db97275-7528-448b-9118-33b1d3dc3e75",
+      "name": "Aggregate Workflow Errors"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "800cf203-2ae0-4915-9718-6b86a49586f1",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthGt",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        4432
+      ],
+      "id": "d0e46adc-4fa4-4250-a0f1-e84665260c49",
+      "name": "If Workflow Errors Exist"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={{ JSON.stringify({ message: `${$json.errors.length} pdfRest operation(s) failed`, errors: $json.errors }, null, 2) }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        672,
+        4336
+      ],
+      "id": "46c5fcef-d66a-429f-ac22-286e55d72cd0",
+      "name": "Stop on Workflow Errors"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/01-sample-pdf.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        6928
+      ],
+      "id": "dfe176e2-fff9-4fe6-b4f8-6934c1634e92",
+      "name": "Read File From Disk for Single Resource Deletion"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        6928
+      ],
+      "id": "1083b21b-eb95-4876-9077-ba0ab9bc3a98",
+      "name": "Upload for Single Resource Deletion",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "deleteResource",
+        "resourceId": "={{ $json.files[0].id }}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        6928
+      ],
+      "id": "4fa44fe9-ec52-458c-b580-2009cfdc529d",
+      "name": "Delete Uploaded Resource",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -688,
+        7088
+      ],
+      "id": "206c43fd-1679-4adb-88f6-4c3f01b89fa8",
+      "name": "Record Upload for Single Resource Deletion Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        6928
+      ],
+      "id": "bc3a03eb-2cb2-4b5c-9052-5a3aef08f095",
+      "name": "Record Delete Uploaded Resource Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/0?-*.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        7312
+      ],
+      "id": "8e3dbbb9-a1c2-4ae9-9990-8a4e400e370e",
+      "name": "Read Files From Disk for Batch Resource Deletion"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        7312
+      ],
+      "id": "ac8cbb2b-1642-4dbe-ba3c-f44a638c8459",
+      "name": "Aggregate Files for Batch Resource Deletion"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "inputFileDataFieldName": [
+          "data",
+          "data_1"
+        ],
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        7312
+      ],
+      "id": "6d466ee5-d17a-49b0-969a-31d477d7878e",
+      "name": "Upload for Batch Resource Deletion",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "deleteResources",
+        "resourceIds": "={{ $json.files[0].id + \",\" + $json.files[1].id }}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        7312
+      ],
+      "id": "129ed5cc-784e-4cba-b290-00c3cc004345",
+      "name": "Delete Uploaded Resources",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        7472
+      ],
+      "id": "2f8789e6-27a7-46b1-bcfa-94c8187f16ca",
+      "name": "Record Upload for Batch Resource Deletion Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -240,
+        7312
+      ],
+      "id": "50d25431-ce69-4b5a-b506-1524b4dd981a",
+      "name": "Record Delete Uploaded Resources Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/01-sample-pdf.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        7696
+      ],
+      "id": "4835597e-277f-4b5d-8dbf-344294d1fcec",
+      "name": "Read File From Disk for Request Status"
+    },
+    {
+      "parameters": {
+        "operation": "ocr",
+        "options": {
+          "responseType": "requestId",
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        7696
+      ],
+      "id": "47f4e8e0-3c58-4f2f-9e0f-9cf087a1b8c0",
+      "name": "Start Asynchronous OCR",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getRequestStatus",
+        "requestId": "={{ $json.requestId }}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        7696
+      ],
+      "id": "3758eceb-3d05-48d2-9195-ae85586882f5",
+      "name": "Get OCR Request Status",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -688,
+        7856
+      ],
+      "id": "9eb62778-0f75-4efa-a109-f665034021c5",
+      "name": "Record Start Asynchronous OCR Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        7696
+      ],
+      "id": "03f0ea83-61f0-4c03-a7df-756391a8336c",
+      "name": "Record Get OCR Request Status Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/02-sworn-declaration.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        8080
+      ],
+      "id": "ae897d62-c26e-4c73-9456-0d694735ecc3",
+      "name": "Read File From Disk for Text Redaction"
+    },
+    {
+      "parameters": {
+        "operation": "redactionPreview",
+        "redactions": "[{\"type\":\"preset\",\"value\":\"date\"}]",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        8080
+      ],
+      "id": "08cb2488-1cc6-4ad2-b870-3f8ca045695f",
+      "name": "Preview Text Redactions",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "redactionApply",
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.outputId }}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        8080
+      ],
+      "id": "9eb44bb9-f656-4d20-934d-971b1bb61e3a",
+      "name": "Apply Text Redactions",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -688,
+        8240
+      ],
+      "id": "2f4bed27-cb30-45cb-bb1c-4c55d5989ec0",
+      "name": "Record Preview Text Redactions Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        8080
+      ],
+      "id": "e09903b5-0959-44ac-9caa-e79ddd0f54fc",
+      "name": "Record Apply Text Redactions Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/01-sample-pdf.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        8464
+      ],
+      "id": "57bd85be-2cd7-4f84-86a3-3443ba399bbc",
+      "name": "Read File From Disk for Encrypt and Decrypt"
+    },
+    {
+      "parameters": {
+        "operation": "encrypt",
+        "newOpenPassword": "p4ssw0rd!",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        8464
+      ],
+      "id": "3a8d4401-f714-41c7-837e-a7c0c10eb6e6",
+      "name": "Encrypt Uploaded PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "decrypt",
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.outputId }}",
+        "currentOpenPassword": "p4ssw0rd!",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        8464
+      ],
+      "id": "8ad6d617-a4b7-41ee-8cd9-0ea05bdf9bfd",
+      "name": "Decrypt Encrypted PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -688,
+        8624
+      ],
+      "id": "29a02354-e1ef-42e6-995a-6c55053a60d1",
+      "name": "Record Encrypt Uploaded PDF Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        8464
+      ],
+      "id": "1d9c81d1-68ff-48fa-8719-be403c137587",
+      "name": "Record Decrypt Encrypted PDF Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/01-sample-pdf.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        8848
+      ],
+      "id": "1b780ac3-7e7e-418d-ac3c-50dbde81ce9b",
+      "name": "Read File From Disk for Restrict and Unrestrict"
+    },
+    {
+      "parameters": {
+        "operation": "restrict",
+        "newPermissionsPassword": "p4ssw0rd!",
+        "options": {
+          "includeFileInfo": false,
+          "restrictions": [
+            "edit_annotations",
+            "copy_content",
+            "edit_content",
+            "accessibility_off",
+            "edit_document_assembly",
+            "edit_fill_and_sign_form_fields",
+            "print_high",
+            "print_low"
+          ]
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        8848
+      ],
+      "id": "bd8c7f24-a1a6-45eb-b475-4235494278ab",
+      "name": "Restrict Uploaded PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "unrestrict",
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.outputId }}",
+        "currentPermissionsPassword": "p4ssw0rd!",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        8848
+      ],
+      "id": "b38c7fd2-726f-4df5-93b2-ecdb093ca66c",
+      "name": "Unrestrict Restricted PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -688,
+        9008
+      ],
+      "id": "88787195-3e4d-430a-b8cb-800290f220da",
+      "name": "Record Restrict Uploaded PDF Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        8848
+      ],
+      "id": "95c33afd-0ea7-4d4b-bddb-fd221e2b6c7f",
+      "name": "Record Unrestrict Restricted PDF Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/0?-*.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        9232
+      ],
+      "id": "22bfdd11-399a-4bd0-92d4-4fd4ec8e0b7f",
+      "name": "Read Files From Disk for PDF Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        9232
+      ],
+      "id": "b24786a1-48b4-414c-a2a9-82578fb777f2",
+      "name": "Aggregate Files for PDF Merge"
+    },
+    {
+      "parameters": {
+        "operation": "merge",
+        "mergeInputs": {
+          "input": [
+            {
+              "pages": "all"
+            },
+            {
+              "inputFileDataFieldName": "data_1",
+              "pages": "all"
+            }
+          ]
+        },
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        9232
+      ],
+      "id": "4ec57a76-24bf-40da-96ac-7921dfeedc8b",
+      "name": "Merge Uploaded PDFs",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        9232
+      ],
+      "id": "a550e4f2-6ab4-4943-97f2-e5c087ceb862",
+      "name": "Record Merge Uploaded PDFs Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/0?-*.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        9616
+      ],
+      "id": "c1968dc8-6228-434f-a23b-9f261ca538c1",
+      "name": "Read Files From Disk for ZIP and Unzip"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        9616
+      ],
+      "id": "2fc34819-af89-4e51-9eaf-e4036a183299",
+      "name": "Aggregate Files for ZIP and Unzip"
+    },
+    {
+      "parameters": {
+        "operation": "zip",
+        "inputFileDataFieldNames": [
+          "data",
+          "data_1"
+        ],
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        9616
+      ],
+      "id": "54dbbc80-37e1-4db3-a877-6eb7d5699cc0",
+      "name": "Create ZIP Archive",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "unzip",
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.outputId }}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        9616
+      ],
+      "id": "6a8e1064-d423-409b-901c-7b382f2e1861",
+      "name": "Extract ZIP Archive",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        9776
+      ],
+      "id": "2dbb2b93-3bd9-4022-8111-7de4d09e512d",
+      "name": "Record Create ZIP Archive Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -240,
+        9616
+      ],
+      "id": "f0ed39c4-acfb-415c-a45e-2e59d99d7111",
+      "name": "Record Extract ZIP Archive Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/{01-sample-pdf.pdf,03-flowers-image.jpg}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        10000
+      ],
+      "id": "ecafe0ca-f6d4-41ad-8634-ec144935782a",
+      "name": "Read Files From Disk for Added Image"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        10000
+      ],
+      "id": "2de874a4-05d4-401e-b267-cf4f73fa4ee6",
+      "name": "Aggregate Files for Added Image"
+    },
+    {
+      "parameters": {
+        "operation": "addImage",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "imageInputType": "inputFile",
+        "imageFileDataFieldNames": [
+          "data_1"
+        ],
+        "imageObjects": "[{\"image_index\":0,\"page\":1,\"x\":0,\"y\":0}]",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        10000
+      ],
+      "id": "befb9eea-aab4-411e-97e2-116968115eda",
+      "name": "Add Image to Uploaded PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        10000
+      ],
+      "id": "f938f1f0-c9b9-4182-8837-42d0914b03b5",
+      "name": "Record Add Image to Uploaded PDF Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/{01-sample-pdf.pdf,03-flowers-image.jpg}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        10384
+      ],
+      "id": "5d317bb0-e6b1-459d-8fdf-ec96ad31bc20",
+      "name": "Read Files From Disk for Added Attachment"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        10384
+      ],
+      "id": "fe86c0fe-c906-494e-bb81-fafa8df9ee39",
+      "name": "Aggregate Files for Added Attachment"
+    },
+    {
+      "parameters": {
+        "operation": "addAttachment",
+        "attachmentFileDataFieldName": "data_1",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        10384
+      ],
+      "id": "388caa13-fb1e-4315-a27d-c3135777dcab",
+      "name": "Attach Image to Uploaded PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        10384
+      ],
+      "id": "5f893394-0d7c-4364-80d3-4945704b9a61",
+      "name": "Record Attach Image to Uploaded PDF Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/03-flowers-image.jpg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1136,
+        10768
+      ],
+      "id": "a44b86b4-4d6f-443c-a4b1-33732bd6f881",
+      "name": "Read File From Disk for Convert to PDF"
+    },
+    {
+      "parameters": {
+        "operation": "convertToPdf",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        10768
+      ],
+      "id": "ae534325-6c41-4fcd-ab45-776eced65044",
+      "name": "Convert Uploaded Image to PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        10768
+      ],
+      "id": "5222fe20-3954-4c3d-ab8d-1710842a38e9",
+      "name": "Record Convert Uploaded Image to PDF Result"
+    },
+    {
+      "parameters": {
+        "numberInputs": 10
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        8464
+      ],
+      "id": "3b978257-dbe7-4e57-8e07-81fa93d5e1ea",
+      "name": "Merge Complex Results 1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        10768
+      ],
+      "id": "c1b69e62-a882-4c58-ae94-810ed91f6b23",
+      "name": "Merge Complex Results 2"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        11152
+      ],
+      "id": "b64e9db6-f00f-4e1d-b9e1-43547115c568",
+      "name": "Upload for Resource Retrieval",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "getResource",
+        "resourceId": "={{ $json.files[0].id }}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        11152
+      ],
+      "id": "1cf8a41d-550e-4da3-83ff-a3daa34e6d3c",
+      "name": "Retrieve Resource",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -688,
+        11312
+      ],
+      "id": "58e83dbb-5b05-4ab0-8710-771850f819cd",
+      "name": "Record Upload for Resource Retrieval Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        11152
+      ],
+      "id": "9635fe75-5b23-45a1-80e5-619fe3b8ace3",
+      "name": "Record Retrieve Resource Result"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -448,
+        11744
+      ],
+      "id": "c9d0b1f3-f8d1-485e-a8a3-51040913176a",
+      "name": "Record Import Form Data into PDF Error"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -224,
+        11584
+      ],
+      "id": "51597621-5ac3-4ce5-a6bb-93f573342de7",
+      "name": "Record Export Form Data from PDF Result"
+    },
+    {
+      "parameters": {
+        "fileSelector": "test/fixtures/signed-pdf/*",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        11968
+      ],
+      "id": "a3461480-4df7-4fe0-983b-e4d2703a4684",
+      "name": "Read Files From Disk for Signed PDF"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        11968
+      ],
+      "id": "74afde1d-0007-4579-aef9-badb97d743e8",
+      "name": "Aggregate Files for Signed PDF"
+    },
+    {
+      "parameters": {
+        "operation": "sign",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "credentialType": "pfx",
+        "pfxCredentialInputType": "inputFile",
+        "pfxCredentialFileDataFieldName": "data_1",
+        "pfxPassphraseInputType": "inputFile",
+        "pfxPassphraseFileDataFieldName": "data_2",
+        "signatureConfiguration": "{\n  \"type\": \"new\",\n  \"name\": \"esignature\",\n  \"logo_opacity\": \"0.5\",\n  \"location\": {\n    \"bottom_left\": {\n      \"x\": \"0\",\n      \"y\": \"0\"\n    },\n    \"top_right\": {\n      \"x\": \"216\",\n      \"y\": \"72\"\n    },\n    \"page\": \"1\"\n  },\n  \"display\": {\n    \"include_distinguished_name\": \"true\",\n    \"include_datetime\": \"true\",\n    \"contact\": \"My contact information\",\n    \"location\": \"My signing location\",\n    \"name\": \"John Doe\",\n    \"reason\": \"My reason for signing\"\n  }\n}",
+        "options": {
+          "logoInputType": "inputFile",
+          "logoFileDataFieldName": "data_3"
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        11968
+      ],
+      "id": "1927b280-45f5-4934-a645-6bf9b1e1c254",
+      "name": "Digitally Sign PDF",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -448,
+        11968
+      ],
+      "id": "1c0f6511-fcab-4384-aa60-725798e712bf",
+      "name": "Record Digitally Sign PDF Result"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read File From Disk for Single Resource Deletion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Files From Disk for Batch Resource Deletion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read File From Disk for Request Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read File From Disk for Text Redaction",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read File From Disk for Encrypt and Decrypt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read File From Disk for Restrict and Unrestrict",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Files From Disk for PDF Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Files From Disk for ZIP and Unzip",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Files From Disk for Added Image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Files From Disk for Added Attachment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read File From Disk for Convert to PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Files From Disk for Import/Export Form Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Read Files From Disk for Signed PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Files From Disk for Import/Export Form Data": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Files for Import/Export Form Data Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Import Form Data into PDF": {
+      "main": [
+        [
+          {
+            "node": "Export Form Data from PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Import Form Data into PDF Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Form Data from PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Export Form Data from PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Export Form Data from PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Files for Import/Export Form Data Upload": {
+      "main": [
+        [
+          {
+            "node": "Import Form Data into PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Split a document",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Translate PDF Text",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Summarize PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Images",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Text",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OCR PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to Word",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to Excel",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to PowerPoint",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to BMP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to GIF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to JPEG",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to PNG",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to TIFF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to Markdown",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to PDF/X",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF to PDF/A",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Compress PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Watermark PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reserve PDF for TDM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add Text to PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add Shapes to PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add Tables to PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set PDF Page Boxes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert PDF Colors",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rasterize PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Linearize PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert XFA to AcroForms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Flatten PDF Forms",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Flatten PDF Transparencies",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Flatten PDF Annotations",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Flatten PDF Layers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload for Resource Retrieval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split a document": {
+      "main": [
+        [
+          {
+            "node": "Record Split a document Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Split a document Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Record Translate PDF Text Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Translate PDF Text Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Query PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Query PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Summarize PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Summarize PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Images": {
+      "main": [
+        [
+          {
+            "node": "Record Extract Images Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Extract Images Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text": {
+      "main": [
+        [
+          {
+            "node": "Record Extract Text Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Extract Text Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR PDF": {
+      "main": [
+        [
+          {
+            "node": "Record OCR PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record OCR PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to Word": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to Word Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to Word Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Excel": {
+      "main": [
+        [
+          {
+            "node": "Record Convert to Excel Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert to Excel Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to PowerPoint": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to PowerPoint Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to PowerPoint Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to BMP": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to BMP Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to BMP Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to GIF": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to GIF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to GIF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to JPEG": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to JPEG Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to JPEG Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to PNG": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to PNG Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to PNG Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to TIFF": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to TIFF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to TIFF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to Markdown": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to Markdown Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to Markdown Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to PDF/X": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to PDF/X Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to PDF/X Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to PDF/A": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF to PDF/A Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF to PDF/A Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compress PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Compress PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Compress PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Watermark PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Watermark PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Watermark PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reserve PDF for TDM": {
+      "main": [
+        [
+          {
+            "node": "Record Reserve PDF for TDM Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Reserve PDF for TDM Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Text to PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Add Text to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Add Text to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Shapes to PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Add Shapes to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Add Shapes to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tables to PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Add Tables to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Add Tables to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set PDF Page Boxes": {
+      "main": [
+        [
+          {
+            "node": "Record Set PDF Page Boxes Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Set PDF Page Boxes Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF Colors": {
+      "main": [
+        [
+          {
+            "node": "Record Convert PDF Colors Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert PDF Colors Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rasterize PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Rasterize PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Rasterize PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linearize PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Linearize PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Linearize PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert XFA to AcroForms": {
+      "main": [
+        [
+          {
+            "node": "Record Convert XFA to AcroForms Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert XFA to AcroForms Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten PDF Forms": {
+      "main": [
+        [
+          {
+            "node": "Record Flatten PDF Forms Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Flatten PDF Forms Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten PDF Transparencies": {
+      "main": [
+        [
+          {
+            "node": "Record Flatten PDF Transparencies Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Flatten PDF Transparencies Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten PDF Annotations": {
+      "main": [
+        [
+          {
+            "node": "Record Flatten PDF Annotations Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Flatten PDF Annotations Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten PDF Layers": {
+      "main": [
+        [
+          {
+            "node": "Record Flatten PDF Layers Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Flatten PDF Layers Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Split a document Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Translate PDF Text Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Query PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Record Summarize PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Record Extract Images Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Record Extract Text Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Record OCR PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to Word Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Record Convert to Excel Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to PowerPoint Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 1",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to BMP Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to GIF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to JPEG Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to PNG Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to TIFF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to Markdown Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to PDF/X Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF to PDF/A Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Record Compress PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Record Watermark PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 2",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Record Reserve PDF for TDM Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Add Text to PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Add Shapes to PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Record Add Tables to PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Record Set PDF Page Boxes Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Record Convert PDF Colors Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Record Rasterize PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Record Linearize PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Record Convert XFA to AcroForms Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Record Flatten PDF Forms Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 3",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Record Flatten PDF Transparencies Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Flatten PDF Annotations Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Flatten PDF Layers Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Single-Input Results 4",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge Single-Input Results 1": {
+      "main": [
+        [
+          {
+            "node": "Merge All Workflow Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Single-Input Results 2": {
+      "main": [
+        [
+          {
+            "node": "Merge All Workflow Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Single-Input Results 3": {
+      "main": [
+        [
+          {
+            "node": "Merge All Workflow Results",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge Single-Input Results 4": {
+      "main": [
+        [
+          {
+            "node": "Merge All Workflow Results",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Read File From Disk for Single Resource Deletion": {
+      "main": [
+        [
+          {
+            "node": "Upload for Single Resource Deletion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload for Single Resource Deletion": {
+      "main": [
+        [
+          {
+            "node": "Delete Uploaded Resource",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Upload for Single Resource Deletion Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Uploaded Resource": {
+      "main": [
+        [
+          {
+            "node": "Record Delete Uploaded Resource Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Delete Uploaded Resource Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Files From Disk for Batch Resource Deletion": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Files for Batch Resource Deletion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Files for Batch Resource Deletion": {
+      "main": [
+        [
+          {
+            "node": "Upload for Batch Resource Deletion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload for Batch Resource Deletion": {
+      "main": [
+        [
+          {
+            "node": "Delete Uploaded Resources",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Upload for Batch Resource Deletion Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Uploaded Resources": {
+      "main": [
+        [
+          {
+            "node": "Record Delete Uploaded Resources Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Delete Uploaded Resources Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File From Disk for Request Status": {
+      "main": [
+        [
+          {
+            "node": "Start Asynchronous OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Asynchronous OCR": {
+      "main": [
+        [
+          {
+            "node": "Get OCR Request Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Start Asynchronous OCR Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get OCR Request Status": {
+      "main": [
+        [
+          {
+            "node": "Record Get OCR Request Status Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Get OCR Request Status Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File From Disk for Text Redaction": {
+      "main": [
+        [
+          {
+            "node": "Preview Text Redactions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preview Text Redactions": {
+      "main": [
+        [
+          {
+            "node": "Apply Text Redactions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Preview Text Redactions Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Text Redactions": {
+      "main": [
+        [
+          {
+            "node": "Record Apply Text Redactions Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Apply Text Redactions Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File From Disk for Encrypt and Decrypt": {
+      "main": [
+        [
+          {
+            "node": "Encrypt Uploaded PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encrypt Uploaded PDF": {
+      "main": [
+        [
+          {
+            "node": "Decrypt Encrypted PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Encrypt Uploaded PDF Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decrypt Encrypted PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Decrypt Encrypted PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Decrypt Encrypted PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File From Disk for Restrict and Unrestrict": {
+      "main": [
+        [
+          {
+            "node": "Restrict Uploaded PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restrict Uploaded PDF": {
+      "main": [
+        [
+          {
+            "node": "Unrestrict Restricted PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Restrict Uploaded PDF Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unrestrict Restricted PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Unrestrict Restricted PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Unrestrict Restricted PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Files From Disk for PDF Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Files for PDF Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Files for PDF Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge Uploaded PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Uploaded PDFs": {
+      "main": [
+        [
+          {
+            "node": "Record Merge Uploaded PDFs Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Merge Uploaded PDFs Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Files From Disk for ZIP and Unzip": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Files for ZIP and Unzip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Files for ZIP and Unzip": {
+      "main": [
+        [
+          {
+            "node": "Create ZIP Archive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ZIP Archive": {
+      "main": [
+        [
+          {
+            "node": "Extract ZIP Archive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Create ZIP Archive Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract ZIP Archive": {
+      "main": [
+        [
+          {
+            "node": "Record Extract ZIP Archive Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Extract ZIP Archive Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Files From Disk for Added Image": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Files for Added Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Files for Added Image": {
+      "main": [
+        [
+          {
+            "node": "Add Image to Uploaded PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Image to Uploaded PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Add Image to Uploaded PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Add Image to Uploaded PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Files From Disk for Added Attachment": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Files for Added Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Files for Added Attachment": {
+      "main": [
+        [
+          {
+            "node": "Attach Image to Uploaded PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Image to Uploaded PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Attach Image to Uploaded PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Attach Image to Uploaded PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File From Disk for Convert to PDF": {
+      "main": [
+        [
+          {
+            "node": "Convert Uploaded Image to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Uploaded Image to PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Convert Uploaded Image to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Convert Uploaded Image to PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Upload for Single Resource Deletion Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Delete Uploaded Resource Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Upload for Batch Resource Deletion Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Delete Uploaded Resources Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Start Asynchronous OCR Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Record Get OCR Request Status Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Record Preview Text Redactions Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Record Apply Text Redactions Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Record Encrypt Uploaded PDF Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Record Decrypt Encrypted PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Record Restrict Uploaded PDF Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Record Unrestrict Restricted PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Record Merge Uploaded PDFs Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Record Create ZIP Archive Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Record Extract ZIP Archive Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 7
+          }
+        ]
+      ]
+    },
+    "Record Add Image to Uploaded PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 8
+          }
+        ]
+      ]
+    },
+    "Record Attach Image to Uploaded PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 1",
+            "type": "main",
+            "index": 9
+          }
+        ]
+      ]
+    },
+    "Record Convert Uploaded Image to PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge All Workflow Results": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Workflow Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Workflow Errors": {
+      "main": [
+        [
+          {
+            "node": "If Workflow Errors Exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Workflow Errors Exist": {
+      "main": [
+        [
+          {
+            "node": "Stop on Workflow Errors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Merge Complex Results 1": {
+      "main": [
+        [
+          {
+            "node": "Merge All Workflow Results",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Merge Complex Results 2": {
+      "main": [
+        [
+          {
+            "node": "Merge All Workflow Results",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Upload for Resource Retrieval": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Resource",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Upload for Resource Retrieval Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Resource": {
+      "main": [
+        [
+          {
+            "node": "Record Retrieve Resource Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Retrieve Resource Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Upload for Resource Retrieval Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Retrieve Resource Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Import Form Data into PDF Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Record Export Form Data from PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 2",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Read Files From Disk for Signed PDF": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Files for Signed PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Files for Signed PDF": {
+      "main": [
+        [
+          {
+            "node": "Digitally Sign PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Digitally Sign PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Digitally Sign PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Digitally Sign PDF Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Digitally Sign PDF Result": {
+      "main": [
+        [
+          {
+            "node": "Merge Complex Results 2",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sanitize n8n Workflow Export"
+  short_description: "Prepare n8n exports for strict workflow updates"
+  default_prompt: "Use $sanitize-n8n-workflow-export to sanitize this exported workflow for n8n-cli workflow update."

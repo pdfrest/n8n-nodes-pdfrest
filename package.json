@@ -1,0 +1,67 @@
+{
+	"name": "@pdfrest/n8n-nodes-pdfrest",
+	"version": "0.1.0",
+	"description": "Convert, compress, secure, OCR, and extract PDF data, built on the Adobe PDF Library. Runs in the cloud or self-hosted.",
+	"license": "MIT",
+	"engines": {
+		"node": "^22.22.0 || ^24.0.0"
+	},
+	"homepage": "https://pdfrest.com",
+	"keywords": [
+		"n8n-community-node-package",
+		"pdfrest",
+		"pdf",
+		"document-processing"
+	],
+	"author": {
+		"name": "Datalogics, Inc.",
+		"email": "support@pdfrest.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/pdfrest/n8n-nodes-pdfrest.git"
+	},
+	"bugs": {
+		"url": "https://github.com/pdfrest/n8n-nodes-pdfrest/issues"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"test": "vitest run test",
+		"test:integration:live": "bash scripts/integration/run-live-tests.sh",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist/credentials",
+		"dist/nodes",
+		"dist/package.json"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/PdfRestApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/PdfRest/PdfRest.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "^0.41.2",
+		"eslint": "9.39.4",
+		"prettier": "3.8.3",
+		"release-it": "20.2.0",
+		"typescript": "5.9.3",
+		"vitest": "^3.2.7"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}

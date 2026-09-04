@@ -1,0 +1,466 @@
+{
+  "name": "pdfRest Error Aggregation Example",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "bb43684b-6ee3-452e-8f24-7e7e2d0e8eb1",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "inputType": "url",
+        "url": [
+          "https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf"
+        ],
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -80
+      ],
+      "id": "1fd79d31-c9fd-475b-a46f-340361d34be2",
+      "name": "pdfRest",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "addTables",
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.files[0].id }}",
+        "tableObjects": "{\"page\":4,\"x\":54,\"y\":540,\"width\":504,\"columns\":[{\"width\":252},{\"width\":252}],\"rows\":[{\"cells\":[{\"text\":\"Name\"},{\"text\":\"Value\"}]}]}",
+        "options": {
+          "includeFileInfo": false,
+          "tagEnabled": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -176
+      ],
+      "id": "f502906e-b323-49c6-8207-62ca29538112",
+      "name": "Add Tables to PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "addTables",
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.files[0].id }}",
+        "tableObjects": "{\"page\":4,\"x\":54,\"y\":540,\"width\":504,\"columns\":[{\"width\":252},{\"width\":252}],\"rows\":[{\"cells\":[{\"text\":\"Name\"},{\"text\":\"Value\"}]}]}",
+        "options": {
+          "includeFileInfo": false,
+          "tagEnabled": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        448,
+        16
+      ],
+      "id": "03b7097d-e06a-4852-8fd3-d83c26f9d71e",
+      "name": "Add Tables to PDF1",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "inputType": "resourceId",
+        "resourceId": "={{ $json.files[0].id }}",
+        "options": {
+          "includeFileInfo": false
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        448,
+        208
+      ],
+      "id": "4903595a-134c-4215-a961-642581844341",
+      "name": "Split PDF",
+      "executeOnce": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "ON04bE7YVBE2OCC6",
+          "name": "pdfRest account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={{ JSON.stringify({ message: `${$json.errors.length} pdfRest operation(s) failed`, errors: $json.errors }, null, 2) }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        -80
+      ],
+      "id": "12438324-0558-4e9a-8f96-fb5b84342631",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "error",
+              "renameField": true,
+              "outputFieldName": "errors"
+            }
+          ]
+        },
+        "options": {
+          "includeBinaries": false,
+          "keepMissing": false
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -80
+      ],
+      "id": "9c28ee31-d6bc-4f19-a37a-a7ca86419b39",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f03e03b0-8c90-4dd5-8258-46cd429822bb",
+              "leftValue": "={{ $json.errors }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthGt",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -80
+      ],
+      "id": "0f37d67e-cc78-404a-b311-7cef797961f5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        912,
+        -80
+      ],
+      "id": "59e2aba4-84dd-4d00-ae73-7f3344844cb0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        704,
+        -160
+      ],
+      "id": "1de8fd6b-0010-47da-988c-668142c39a5f",
+      "name": "Record Add Tables Result"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        704,
+        32
+      ],
+      "id": "9d1f1e8b-0d2d-4c6b-83c4-4a046f905e12",
+      "name": "Record Add Tables 1 Result"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $input.item.error ? { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } : {} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        704,
+        224
+      ],
+      "id": "739fcdcf-c7ae-4214-93e6-5356ed8723e6",
+      "name": "Record Split Result"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        400
+      ],
+      "id": "84beca41-cb00-478c-a4b2-939125dfde72",
+      "name": "Record Upload Error"
+    },
+    {
+      "parameters": {
+        "errorType": "errorObject",
+        "errorObject": "={{ JSON.stringify({ message: 'Shared pdfRest upload prerequisite failed', errors: [$json.error] }, null, 2) }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        704,
+        400
+      ],
+      "id": "5662bfac-2060-40b8-a3eb-49ce200b3ab3",
+      "name": "Stop on Upload Error"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "pdfRest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pdfRest": {
+      "main": [
+        [
+          {
+            "node": "Add Tables to PDF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add Tables to PDF1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Upload Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tables to PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Add Tables Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Add Tables Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Tables to PDF1": {
+      "main": [
+        [
+          {
+            "node": "Record Add Tables 1 Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Add Tables 1 Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split PDF": {
+      "main": [
+        [
+          {
+            "node": "Record Split Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record Split Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Add Tables Result": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Add Tables 1 Result": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Record Split Result": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Record Upload Error": {
+      "main": [
+        [
+          {
+            "node": "Stop on Upload Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

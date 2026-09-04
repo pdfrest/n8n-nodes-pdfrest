@@ -1,0 +1,19 @@
+# Dependencies and generated output
+node_modules
+dist
+coverage
+tmp
+outputs
+*.log
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+
+# Operating system metadata
+.DS_Store
+
+# Generated integration-test signing credentials
+test/fixtures/**/02-credential.pfx
+test/fixtures/**/03-password.txt

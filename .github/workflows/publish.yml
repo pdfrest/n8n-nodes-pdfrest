@@ -1,0 +1,226 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate-tag:
+    name: Validate stable release tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.22.0
+          package-manager-cache: false
+
+      - name: Match tag to package version
+        id: version
+        shell: bash
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Only stable vMAJOR.MINOR.PATCH tags can publish" >&2
+            exit 1
+          fi
+
+          package_version=$(node -p "require('./package.json').version")
+          if [[ "v$package_version" != "$GITHUB_REF_NAME" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version $package_version" >&2
+            exit 1
+          fi
+
+          echo "version=$package_version" >> "$GITHUB_OUTPUT"
+
+  static:
+    name: Release checks (Node.js ${{ matrix.node-version }})
+    needs: validate-tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.22.0
+          - 24.19.0
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+  live:
+    name: Release live pdfRest integration
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: pdfrest-live
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.22.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build community node
+        run: npm run build
+
+      - name: Install live-test tools without credentials
+        run: |
+          n8n_version=$(tr -d '[:space:]' < .n8n-version)
+          n8n_cli_version=$(tr -d '[:space:]' < .n8n-cli-version)
+          npm install \
+            --prefix "$RUNNER_TEMP/pdfrest-live-tools" \
+            --no-save \
+            --no-package-lock \
+            "n8n@$n8n_version" \
+            "@n8n/cli@$n8n_cli_version"
+
+      - name: Run live endpoint workflows
+        id: live-tests
+        run: bash scripts/integration/run-live-tests.sh
+        env:
+          PDFREST_API_KEY: ${{ secrets.PDFREST_API_KEY }}
+          PDFREST_LIVE_TOOLS_DIR: ${{ runner.temp }}/pdfrest-live-tools
+          PDFREST_BASE_URL: ${{ vars.PDFREST_BASE_URL }}
+          PDFREST_TEST_PDF_URL: ${{ vars.PDFREST_TEST_PDF_URL }}
+          PDFREST_TEST_REDACTION_PDF_URL: ${{ vars.PDFREST_TEST_REDACTION_PDF_URL }}
+          PDFREST_TEST_IMAGE_URL: ${{ vars.PDFREST_TEST_IMAGE_URL }}
+          PDFREST_DIAGNOSTICS_DIR: ${{ runner.temp }}/pdfrest-diagnostics
+
+      - name: Write live-test summary
+        if: always()
+        run: >-
+          node scripts/integration/write-github-summary.mjs
+          --diagnostics "$RUNNER_TEMP/pdfrest-diagnostics"
+          --output "$GITHUB_STEP_SUMMARY"
+          --artifact-output "$RUNNER_TEMP/pdfrest-sanitized-diagnostics/diagnostics.json"
+        env:
+          LIVE_TEST_OUTCOME: ${{ steps.live-tests.outcome }}
+          LIVE_TEST_ARTIFACT_NAME: release-live-diagnostics-${{ github.run_attempt }}
+          LIVE_TEST_ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: release-live-diagnostics-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pdfrest-sanitized-diagnostics/diagnostics.json
+          if-no-files-found: warn
+          retention-days: 5
+
+  publish:
+    name: Publish to npm with provenance
+    needs:
+      - validate-tag
+      - live
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: npm-production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.22.0
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install trusted-publishing npm CLI
+        run: npm install --global npm@11.19.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      # One-time policy exception for v0.1.0 only: npm cannot authorize trusted
+      # publishing until the package exists. Remove this token environment and
+      # configure npm OIDC trusted publishing immediately after this release.
+      # The bootstrap path must be removed prior to future releases.
+      - name: Publish initial package with bootstrap token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
+        run: |
+          if [[ -z "$NODE_AUTH_TOKEN" ]]; then
+            echo 'The npm bootstrap token is not configured' >&2
+            exit 1
+          fi
+
+          npm run release
+
+      - name: Wait for registry visibility
+        env:
+          PACKAGE_VERSION: ${{ needs.validate-tag.outputs.version }}
+        run: |
+          for attempt in {1..12}; do
+            published_version=$(npm view "@pdfrest/n8n-nodes-pdfrest@$PACKAGE_VERSION" version 2>/dev/null || true)
+            if [[ "$published_version" == "$PACKAGE_VERSION" ]]; then
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "@pdfrest/n8n-nodes-pdfrest@$PACKAGE_VERSION did not become visible" >&2
+          exit 1
+
+      - name: Run n8n community package scan
+        env:
+          PACKAGE_VERSION: ${{ needs.validate-tag.outputs.version }}
+        run: |
+          set +e
+          scan_output=$(npx --yes @n8n/scan-community-package@0.32.0 \
+            "@pdfrest/n8n-nodes-pdfrest@$PACKAGE_VERSION" 2>&1)
+          scan_status=$?
+          set -e
+
+          printf '%s\n' "$scan_output"
+          if [[ $scan_status -ne 0 ]] || \
+            ! grep -Fq 'has passed all security checks' <<< "$scan_output"; then
+            echo 'The n8n community package scan did not pass' >&2
+            exit 1
+          fi

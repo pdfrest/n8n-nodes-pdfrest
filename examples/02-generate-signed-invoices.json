@@ -1,0 +1,464 @@
+{
+  "name": "Generate signed invoices from data",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Multipart webhook payload\nSend these fields as `multipart/form-data`:\n- `invoiceNumber`: `INV-1001`\n- `customer`: `Ada Lovelace`\n- `customerEmail`: `ada@example.com`\n- `accountNumber`: `ACCT-1001`\n- `currency`: `USD`\n- `lineItems`: `[{\"description\":\"Consulting\",\"quantity\":2,\"unitPrice\":125}]`\n- `total`: `250`\n\nRequired file fields:\n- `pfx`: PFX signing certificate\n- `pfxPassphrase`: text file containing its passphrase\n\nOptional file fields:\n- `logo`: invoice logo image\n- `terms`: terms PDF\n\nSelect pdfRest and SMTP credentials.\n\n## Disabled nodes\nThese steps are disabled because they are optional.\n- **Add Logo**: Include `logo` and enable for branded invoices.\n- **Append Standard Terms**: Include `terms` and enable to append those pages.",
+        "height": 696,
+        "width": 816,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -720
+      ],
+      "id": "5ea581aa-b545-4a3e-a78e-6b3c22ba563b",
+      "name": "Sample Payload and Setup"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-secure-invoice",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -640,
+        224
+      ],
+      "id": "991e9276-5488-46e3-abf4-1176e50868b9",
+      "name": "Receive Invoice",
+      "webhookId": "547557c8-afbd-4d66-a188-ed2a98e84713"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11e4e639-f319-46d9-a206-0cab53130f72",
+              "name": "invoiceNumber",
+              "value": "={{ $json.body.invoiceNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "16cd70c3-b02f-49b5-ae4b-35b11f1f1e7c",
+              "name": "customer",
+              "value": "={{ $json.body.customer }}",
+              "type": "string"
+            },
+            {
+              "id": "35c7c424-03e8-4c79-a70f-8ea0fb0727b0",
+              "name": "customerEmail",
+              "value": "={{ $json.body.customerEmail }}",
+              "type": "string"
+            },
+            {
+              "id": "2e0c24cc-526f-459a-a510-39d68da296f4",
+              "name": "accountNumber",
+              "value": "={{ $json.body.accountNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "48cf9514-bcbd-44e8-a4fd-00eb8a470e7a",
+              "name": "currency",
+              "value": "={{ $json.body.currency || \"USD\" }}",
+              "type": "string"
+            },
+            {
+              "id": "0e73f299-42fb-4a4f-a951-b49ba00aa6d2",
+              "name": "lineItems",
+              "value": "={{ typeof $json.body.lineItems === 'string' ? JSON.parse($json.body.lineItems) : $json.body.lineItems }}",
+              "type": "array"
+            },
+            {
+              "id": "fa6e9195-1b33-453e-a577-b14a2e811313",
+              "name": "total",
+              "value": "={{ Number($json.body.total) }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        0
+      ],
+      "id": "2f39cc48-a9f5-4652-a0a6-58d041e7cd7a",
+      "name": "Shape Invoice Data"
+    },
+    {
+      "parameters": {
+        "operation": "blankPdf",
+        "pageCount": 1,
+        "pageSize": "letter",
+        "pageOrientation": "portrait",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "3301cc83-6535-4fbe-a455-71201ef36292",
+      "name": "Create Letter PDF",
+      "notes": "Change Page Size to A4 for EU-oriented invoices.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addText",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "textObjects": "={{ [\n  { font: 'Arial', max_width: '500', opacity: '1', page: '1', rotation: '0', text: 'INVOICE', text_color_rgb: '0,0,0', text_size: '24', x: '54', y: '720' },\n  { font: 'Arial', max_width: '500', opacity: '1', page: '1', rotation: '0', text: 'Invoice ' + $('Shape Invoice Data').item.json.invoiceNumber, text_color_rgb: '0,0,0', text_size: '12', x: '54', y: '680' },\n  { font: 'Arial', max_width: '500', opacity: '1', page: '1', rotation: '0', text: 'Customer: ' + $('Shape Invoice Data').item.json.customer, text_color_rgb: '0,0,0', text_size: '12', x: '54', y: '650' },\n  { font: 'Arial', max_width: '500', opacity: '1', page: '1', rotation: '0', text: 'Items: ' + $('Shape Invoice Data').item.json.lineItems.map(item => item.description + ' (' + item.quantity + ' × ' + item.unitPrice + ')').join('; '), text_color_rgb: '0,0,0', text_size: '10', x: '54', y: '610' },\n  { font: 'Arial', max_width: '500', opacity: '1', page: '1', rotation: '0', text: 'Total: ' + $('Shape Invoice Data').item.json.currency + ' ' + $('Shape Invoice Data').item.json.total, text_color_rgb: '0,0,0', text_size: '16', x: '54', y: '540' }\n] }}",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        32,
+        0
+      ],
+      "id": "d2825dc8-000a-4a3a-a6fe-1dd38ac48bde",
+      "name": "Add Invoice Text",
+      "notes": "The layout leaves room for a future ZUGFeRD/Factur-X XML attachment. That step is not included in this version.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        256,
+        80
+      ],
+      "id": "dedb31af-d2db-4519-b5f2-e8f7c6bdfce2",
+      "name": "Provide Logo Input"
+    },
+    {
+      "parameters": {
+        "operation": "addImage",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "imageInputType": "inputFile",
+        "imageFileDataFieldNames": [
+          "logo"
+        ],
+        "imageObjects": "[{\"image_index\":0,\"page\":1,\"x\":450,\"y\":700,\"width\":100}]",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        480,
+        80
+      ],
+      "id": "5d307d70-281e-40f3-a684-de4294defe87",
+      "name": "Add Logo",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1152,
+        224
+      ],
+      "id": "5bd8489a-1bbc-455e-bf18-094c5a164a82",
+      "name": "Provide Signing Files"
+    },
+    {
+      "parameters": {
+        "operation": "sign",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "credentialType": "pfx",
+        "pfxCredentialInputType": "inputFile",
+        "pfxCredentialFileDataFieldName": "pfx",
+        "pfxPassphraseInputType": "inputFile",
+        "pfxPassphraseFileDataFieldName": "pfxPassphrase",
+        "signatureConfiguration": "{\"type\":\"new\",\"name\":\"invoice-signature\",\"location\":{\"page\":\"1\",\"bottom_left\":{\"x\":\"54\",\"y\":\"36\"},\"top_right\":{\"x\":\"270\",\"y\":\"108\"}},\"display\":{\"include_datetime\":\"true\",\"name\":\"Your Company\",\"reason\":\"Invoice approval\"}}",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        224
+      ],
+      "id": "a22e521f-c1e7-4e07-a892-cc88abbf4bf1",
+      "name": "Digitally Sign Invoice",
+      "notes": "Supply your own certificate. The workflow will fail at this step until you provide a valid PFX and passphrase file.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        144
+      ],
+      "id": "8895db89-ee0a-447f-8d08-80c07f2b11c9",
+      "name": "Provide Terms Input"
+    },
+    {
+      "parameters": {
+        "operation": "merge",
+        "mergeInputs": {
+          "input": [
+            {
+              "inputType": "inputFile",
+              "inputFileDataFieldName": "data",
+              "pages": "all"
+            },
+            {
+              "inputType": "inputFile",
+              "inputFileDataFieldName": "terms",
+              "pages": "all"
+            }
+          ]
+        },
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        928,
+        144
+      ],
+      "id": "59dc39a1-229b-43d4-a9dd-fa1bc27321e0",
+      "name": "Append Standard Terms",
+      "notes": "Enable this optional Merge PDFs step to append the PDF supplied in the terms file field.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "billing@example.com",
+        "toEmail": "={{ $('Shape Invoice Data').item.json.customerEmail }}",
+        "subject": "={{ 'Invoice ' + $('Shape Invoice Data').item.json.invoiceNumber }}",
+        "emailFormat": "text",
+        "text": "Your signed invoice is attached.",
+        "options": {
+          "fileAttachments": "data",
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1600,
+        224
+      ],
+      "id": "9853919d-1c8d-4415-a93a-f85f22e63314",
+      "name": "Email Signed Invoice",
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_SMTP_CREDENTIAL_ID",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Receive Invoice": {
+      "main": [
+        [
+          {
+            "node": "Shape Invoice Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Provide Logo Input",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Provide Signing Files",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Provide Terms Input",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Shape Invoice Data": {
+      "main": [
+        [
+          {
+            "node": "Create Letter PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Letter PDF": {
+      "main": [
+        [
+          {
+            "node": "Add Invoice Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Invoice Text": {
+      "main": [
+        [
+          {
+            "node": "Provide Logo Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Provide Logo Input": {
+      "main": [
+        [
+          {
+            "node": "Add Logo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Logo": {
+      "main": [
+        [
+          {
+            "node": "Provide Terms Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Provide Signing Files": {
+      "main": [
+        [
+          {
+            "node": "Digitally Sign Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Digitally Sign Invoice": {
+      "main": [
+        [
+          {
+            "node": "Email Signed Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Provide Terms Input": {
+      "main": [
+        [
+          {
+            "node": "Append Standard Terms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Standard Terms": {
+      "main": [
+        [
+          {
+            "node": "Provide Signing Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

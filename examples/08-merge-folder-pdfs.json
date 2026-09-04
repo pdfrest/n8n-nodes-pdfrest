@@ -1,0 +1,234 @@
+{
+  "name": "Combine all PDFs in a folder into a single file",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup\nSelect Google Drive and pdfRest credentials, then replace the Merge and Output folder IDs. Add at least two PDFs to the Merge folder.\n\n**Merge Inputs** includes entries for the first two files. If the folder contains more than two PDFs, add one Merge Inputs entry for each additional file.\n\nFiles are sorted by filename before merging, so use filename prefixes such as `01-`, `02-`, and `03-` to control page order.",
+        "height": 340,
+        "width": 520,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -440
+      ],
+      "id": "45932c66-4beb-4a37-afe0-b1b9fa1590f6",
+      "name": "Setup"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        0
+      ],
+      "id": "d3144a37-648b-4afb-a8a7-2f4e307f9c14",
+      "name": "When Clicking Execute Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "operation": "search",
+        "searchMethod": "query",
+        "queryString": "mimeType = 'application/pdf' and trashed = false",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "YOUR_MERGE_FOLDER_ID",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "634dfa35-04fc-4796-a171-3449ab163fa9",
+      "name": "List PDFs in Merge Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -160,
+        0
+      ],
+      "id": "4d60dd03-acd3-41bc-acc9-32ee8a319e1f",
+      "name": "Download Each PDF",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all().sort((a, b) =>\n  (a.binary?.data?.fileName || '').localeCompare(b.binary?.data?.fileName || '')\n);\n\nconst binary = {};\nfor (const [index, item] of items.entries()) {\n  if (!item.binary?.data) continue;\n  binary[index === 0 ? 'data' : `data_${index}`] = item.binary.data;\n}\n\nif (Object.keys(binary).length < 2) {\n  throw new Error('The Merge folder must contain at least two PDF files.');\n}\n\nreturn [{ json: { fileCount: Object.keys(binary).length }, binary }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        0
+      ],
+      "id": "e740d560-4e46-48b2-aad6-60fde0ddd9a3",
+      "name": "Sort and Collect PDF Files"
+    },
+    {
+      "parameters": {
+        "operation": "merge",
+        "mergeInputs": {
+          "input": [
+            {
+              "inputType": "inputFile",
+              "inputFileDataFieldName": "data",
+              "pages": "all"
+            },
+            {
+              "inputType": "inputFile",
+              "inputFileDataFieldName": "data_1",
+              "pages": "all"
+            }
+          ]
+        },
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {
+          "output": "merged-folder"
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "f68bf934-2638-4ecc-ab3b-3e9817e33689",
+      "name": "Merge PDFs",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ 'merged-' + $now.toFormat('yyyy-LL-dd-HHmm') + '.pdf' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_MERGED_OUTPUT_FOLDER_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        560,
+        0
+      ],
+      "id": "b7612075-58ec-47d9-a779-4fe513d3f60f",
+      "name": "Upload Merged PDF",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Clicking Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "List PDFs in Merge Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List PDFs in Merge Folder": {
+      "main": [
+        [
+          {
+            "node": "Download Each PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Each PDF": {
+      "main": [
+        [
+          {
+            "node": "Sort and Collect PDF Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort and Collect PDF Files": {
+      "main": [
+        [
+          {
+            "node": "Merge PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge PDFs": {
+      "main": [
+        [
+          {
+            "node": "Upload Merged PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

@@ -1,0 +1,178 @@
+{
+  "name": "Convert Word, Excel, PowerPoint, and images to PDF on upload",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup\nSelect Google Drive and pdfRest credentials, then replace the Convert and PDF folder IDs. To create accessibility tags for a supported Office or structured-text file, select its **Input Format** and enable **Tagged PDF**.\n\nSupported inputs include Microsoft Word, Excel, PowerPoint, CSV, HTML, JSON, Markdown, plain text, PostScript/EPS, XML, and BMP/GIF/JPG/PNG/TIFF images. A PDF input does not need conversion.",
+        "height": 320,
+        "width": 500,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -400
+      ],
+      "id": "8b478987-ca13-4f10-acd2-06db7e677f15",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "YOUR_CONVERT_FOLDER_ID",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        0
+      ],
+      "id": "f7a5beb5-3abe-44b0-a8be-1a52d06a802b",
+      "name": "Watch Convert Folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "3f74fe16-6d3b-4179-aa04-893ea07af893",
+      "name": "Download Uploaded File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "convertToPdf",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "conversionType": "",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1e957724-ee53-4ad3-a79c-bfaab7ee01b6",
+      "name": "Convert File to PDF",
+      "notes": "For accessible output from a supported Office or structured-text file, select its Input Format and enable Tagged PDF. Supported inputs include Word, Excel, PowerPoint, CSV, HTML, JSON, Markdown, plain text, PostScript/EPS, XML, email, and BMP/JPG/PNG/TIFF images.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Download Uploaded File').item.binary.data.fileName.replace(/\\.[^.]+$/, '') + '.pdf' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_PDF_FOLDER_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        280,
+        0
+      ],
+      "id": "996e71d8-a6dc-4049-a832-2ebe4fbb600a",
+      "name": "Upload Converted PDF",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Watch Convert Folder": {
+      "main": [
+        [
+          {
+            "node": "Download Uploaded File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Uploaded File": {
+      "main": [
+        [
+          {
+            "node": "Convert File to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert File to PDF": {
+      "main": [
+        [
+          {
+            "node": "Upload Converted PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}
