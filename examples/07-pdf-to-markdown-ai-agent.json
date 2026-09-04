@@ -1,0 +1,170 @@
+{
+  "name": "Chat with any PDF: convert to Markdown and hand to an AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup\nSelect pdfRest and OpenAI credentials, open the Form URL, upload a PDF, and ask a question. The required OpenAI Chat Model is connected beneath the Agent.\n\nTo make this conversational, replace the Form Trigger with a Chat Trigger that supports file uploads in your n8n deployment and keep the `data` binary field name.",
+        "height": 300,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -420
+      ],
+      "id": "5b9bcb47-0458-4f6e-ae37-2977d2b46c14",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "formTitle": "Chat with a PDF",
+        "formDescription": "Upload a PDF and ask one question about its contents.",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "data",
+              "fieldLabel": "PDF File",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldName": "question",
+              "fieldLabel": "Question",
+              "fieldType": "textarea",
+              "placeholder": "What should I know about this document?",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -560,
+        0
+      ],
+      "id": "49a1f2f7-8a76-40d6-a3ee-4bf998b38a83",
+      "name": "Upload PDF and Question",
+      "webhookId": "14b43027-4744-4cc1-a8c2-a1dbfde62eae"
+    },
+    {
+      "parameters": {
+        "operation": "convertMarkdown",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "options": {
+          "outputType": "json"
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "5bcde6e2-c1c3-4480-a5f9-d18164391139",
+      "name": "Convert PDF to Markdown",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Upload PDF and Question').item.json.question + '\\n\\nDocument Markdown:\\n' + JSON.stringify($json) }}",
+        "hasOutputParser": false,
+        "needsFallback": false,
+        "options": {
+          "systemMessage": "Answer only from the supplied document Markdown. Say when the document does not contain the answer."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        20,
+        0
+      ],
+      "id": "a5ff82d0-6c0c-4468-a432-c4a3de7eb29d",
+      "name": "PDF Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        20,
+        240
+      ],
+      "id": "c2a131f1-110f-4dee-a556-cab01524227c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Upload PDF and Question": {
+      "main": [
+        [
+          {
+            "node": "Convert PDF to Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to Markdown": {
+      "main": [
+        [
+          {
+            "node": "PDF Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PDF Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

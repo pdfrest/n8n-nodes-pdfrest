@@ -1,0 +1,358 @@
+{
+  "name": "Prepare PDFs for AI: OCR, Markdown, summary, then agent",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup\n1. Select your pdfRest and OpenAI credentials.\n2. Click **Execute Workflow** to open the form.\n3. Upload a PDF, enter a question, and submit the form.\n\n## Choose how to process the PDF\n- **Scanned PDF:** Leave **OCR PDF** enabled. It uses English by default.\n- **PDF with selectable text:** Disable **OCR PDF**. To detect these files automatically, add the **Image Only** query to **Query Page Count**, then use an If node to send only image-only PDFs through OCR.\n- **Very large PDF:** Set a page range on **Convert PDF to Markdown** and **Summarize PDF** so the workflow processes only the pages you need.\n\n## Use this workflow for RAG\nReplace **Document Agent** with the nodes that insert documents into your vector store.",
+        "height": 460,
+        "width": 520,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -640
+      ],
+      "id": "f2eb2897-ae8a-401e-a658-1f74f69e0e25",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "formTitle": "Prepare a PDF for AI",
+        "formDescription": "Upload a PDF and ask the agent a question about it.",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "data",
+              "fieldLabel": "PDF File",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldName": "question",
+              "fieldLabel": "Question",
+              "fieldType": "textarea",
+              "placeholder": "What are the main ideas in this document?",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -640,
+        0
+      ],
+      "id": "45c3eab3-8e6f-4b37-ae74-9e7cc0531385",
+      "name": "Upload PDF Form",
+      "notes": "A Google Drive or Webhook trigger can replace this form. Ensure the uploaded PDF still reaches the next step in the data file field.",
+      "notesInFlow": true,
+      "webhookId": "7c7c282e-8938-446b-ae4c-4176ce1000e4"
+    },
+    {
+      "parameters": {
+        "operation": "pdfInfo",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "queries": "selected",
+        "selectedQueries": [
+          "page_count"
+        ],
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        -160
+      ],
+      "id": "6789ca9e-c1b3-4fb4-a2df-75310e88f206",
+      "name": "Query Page Count",
+      "notes": "For large PDFs, use the page count to decide whether to restrict the pages processed by later steps.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "ocr",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {
+          "languages": [
+            "English"
+          ]
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        80
+      ],
+      "id": "ef9f2d2f-f3fe-465e-aaab-82b387f6fc93",
+      "name": "OCR PDF",
+      "notes": "For born-digital PDFs with usable text, add a condition to skip OCR if reprocessing is not wanted.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "convertMarkdown",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "options": {
+          "outputType": "json",
+          "pageBreakComments": "on"
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "8d8836a7-7e55-4979-a354-52766db053f9",
+      "name": "Convert PDF to Markdown",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "summarize",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "options": {
+          "summaryFormat": "bullet_points",
+          "targetWordCount": 200,
+          "outputFormat": "markdown",
+          "outputType": "json"
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        200
+      ],
+      "id": "eb7cd731-76a6-4a36-a7a6-edb22577e1de",
+      "name": "Summarize PDF",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        200,
+        80
+      ],
+      "id": "ed2ec7ba-dda6-4407-a46a-88c95c1b029c",
+      "name": "Join Markdown and Summary"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "2007d472-668e-48af-a2a5-26c618e4721e",
+      "name": "Join Metadata"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Upload PDF Form').item.json.question + '\\n\\nDocument Markdown:\\n' + JSON.stringify($('Convert PDF to Markdown').item.json) }}",
+        "hasOutputParser": false,
+        "needsFallback": false,
+        "options": {
+          "systemMessage": "={{ 'Use the document only. Treat this pdfRest summary as orientation, not as a replacement for the source:\\n' + JSON.stringify($('Summarize PDF').item.json) }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        700,
+        0
+      ],
+      "id": "9d91b2e4-7c05-4e58-acc2-76f008ccdeea",
+      "name": "Document Agent",
+      "notes": "Replace this Agent with a vector store insert node when using the workflow as a RAG ingestion pipeline.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        700,
+        240
+      ],
+      "id": "ce1aa86f-24be-438a-a30f-66eed9b52f21",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Upload PDF Form": {
+      "main": [
+        [
+          {
+            "node": "Query Page Count",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OCR PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR PDF": {
+      "main": [
+        [
+          {
+            "node": "Convert PDF to Markdown",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Summarize PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert PDF to Markdown": {
+      "main": [
+        [
+          {
+            "node": "Join Markdown and Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize PDF": {
+      "main": [
+        [
+          {
+            "node": "Join Markdown and Summary",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Join Markdown and Summary": {
+      "main": [
+        [
+          {
+            "node": "Join Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Page Count": {
+      "main": [
+        [
+          {
+            "node": "Join Metadata",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Join Metadata": {
+      "main": [
+        [
+          {
+            "node": "Document Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Document Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

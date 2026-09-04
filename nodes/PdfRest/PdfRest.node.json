@@ -1,0 +1,18 @@
+{
+	"node": "@pdfrest/n8n-nodes-pdfrest.pdfRest",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Utility"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://docs.pdfrest.com/pdfrest-api-toolkit-cloud/getting-started/"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://docs.pdfrest.com/"
+			}
+		]
+	}
+}

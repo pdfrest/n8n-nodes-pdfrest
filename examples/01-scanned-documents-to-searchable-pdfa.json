@@ -1,0 +1,387 @@
+{
+  "name": "Turn scanned documents into searchable PDF/A records",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup\n1. Select Google Drive and pdfRest credentials.\n2. Replace the Inbox and Archive folder IDs.\n3. Set **Languages** on OCR PDF if English is not sufficient.\n4. Optionally select **Input Format** and optional fields before enabling **Convert Image to PDF**.\n5. Configure the spreadsheet and sheet before enabling **Log Archive Record**.\n\n## Disabled nodes\nThese steps are disabled because they are optional.\n- **Convert Image to PDF**: Enable for TIFF or JPG scans; leave disabled or delete for PDF inputs.\n- **Log Archive Record**: Enable to maintain a Google Sheets archive log.\n\nUse PDF/A-3b instead of PDF/A-2b when records must retain embedded attachments. Turn rasterization on only when the normal PDF/A conversion fails.",
+        "height": 520,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        -540
+      ],
+      "id": "82c25d05-3360-482f-ae87-d695113d67ff",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "YOUR_INBOX_FOLDER_ID",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        0
+      ],
+      "id": "a50e1cd8-8fd5-470f-a122-ee43e05cd7e7",
+      "name": "Watch Inbox Folder",
+      "notes": "Swap this Google Drive trigger for Dropbox or SFTP when needed. Keep the same binary-file handoff to the download and pdfRest steps.",
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "4432d289-7cc4-43a6-ab06-6e81340eb218",
+      "name": "Download Source File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "convertToPdf",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "conversionType": "",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        0
+      ],
+      "id": "a61f19ff-40c0-4d7c-a6da-72ffb06add76",
+      "name": "Convert Image to PDF",
+      "notes": "This optional step is only needed for TIFF or JPG scans. Delete or disable it when the source is already a PDF.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "ocr",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {
+          "languages": [
+            "English"
+          ]
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        80,
+        0
+      ],
+      "id": "38feef1c-178f-4b31-ae9d-20be99d89a20",
+      "name": "OCR PDF",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdfInfo",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "queries": "selected",
+        "selectedQueries": [
+          "page_count",
+          "title"
+        ],
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -120
+      ],
+      "id": "486b0e36-35b3-4c74-a3b3-9fb8aca601cb",
+      "name": "Query PDF Metadata",
+      "notes": "This step supplies the page count and title used for the archive filename and log row. Its JSON output does not contain the OCR PDF.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "convertPdfA",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "pdfAVersion": "PDF/A-2b",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {
+          "rasterizeIfErrorsEncountered": "off"
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        320,
+        120
+      ],
+      "id": "20df3263-7ce4-4df3-a8a8-5e167e8396ce",
+      "name": "Convert to PDF/A-2b",
+      "notes": "Enable Rasterize If Errors Encountered only when normal PDF/A conversion fails. Rasterizing can reduce fidelity and remove interactive content.",
+      "notesInFlow": true,
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "92ac9efd-0590-4dad-aaf3-c4402282fe86",
+      "name": "Join File and Metadata"
+    },
+    {
+      "parameters": {
+        "name": "={{ (($json.title || $('Download Source File').item.binary.data.fileName || 'archived-document').toString().replace(/\\.[^.]+$/, '')) + '-' + $now.toFormat('yyyy-LL-dd') + '.pdf' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_ARCHIVE_FOLDER_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        800,
+        0
+      ],
+      "id": "66ff662f-1a9f-44cd-accb-17be7e17af71",
+      "name": "Upload Archive File",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Archive Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sourceFilename": "={{ $('Download Source File').item.binary.data.fileName }}",
+            "pageCount": "={{ $('Query PDF Metadata').item.json.page_count }}",
+            "archiveUrl": "={{ 'https://drive.google.com/open?id=' + $json.id }}",
+            "timestamp": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "04983049-8196-4c73-a89c-c2ba2e469b94",
+      "name": "Log Archive Record",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Watch Inbox Folder": {
+      "main": [
+        [
+          {
+            "node": "Download Source File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Source File": {
+      "main": [
+        [
+          {
+            "node": "Convert Image to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert Image to PDF": {
+      "main": [
+        [
+          {
+            "node": "OCR PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR PDF": {
+      "main": [
+        [
+          {
+            "node": "Query PDF Metadata",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Convert to PDF/A-2b",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query PDF Metadata": {
+      "main": [
+        [
+          {
+            "node": "Join File and Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to PDF/A-2b": {
+      "main": [
+        [
+          {
+            "node": "Join File and Metadata",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Join File and Metadata": {
+      "main": [
+        [
+          {
+            "node": "Upload Archive File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Archive File": {
+      "main": [
+        [
+          {
+            "node": "Log Archive Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

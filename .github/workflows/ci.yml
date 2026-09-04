@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Static checks (Node.js ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version:
+          - 22.22.0
+          - 24.19.0
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+  live:
+    name: Live pdfRest integration
+    needs: static
+    if: >-
+      ${{
+        needs.static.result == 'success' &&
+        (
+          github.event_name != 'pull_request' ||
+          (
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            github.event.pull_request.user.login != 'dependabot[bot]'
+          )
+        )
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: pdfrest-live
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.22.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build community node
+        run: npm run build
+
+      - name: Install live-test tools without credentials
+        run: |
+          n8n_version=$(tr -d '[:space:]' < .n8n-version)
+          n8n_cli_version=$(tr -d '[:space:]' < .n8n-cli-version)
+          npm install \
+            --prefix "$RUNNER_TEMP/pdfrest-live-tools" \
+            --no-save \
+            --no-package-lock \
+            "n8n@$n8n_version" \
+            "@n8n/cli@$n8n_cli_version"
+
+      - name: Run live endpoint workflows
+        id: live-tests
+        run: bash scripts/integration/run-live-tests.sh
+        env:
+          PDFREST_API_KEY: ${{ secrets.PDFREST_API_KEY }}
+          PDFREST_LIVE_TOOLS_DIR: ${{ runner.temp }}/pdfrest-live-tools
+          PDFREST_BASE_URL: ${{ vars.PDFREST_BASE_URL }}
+          PDFREST_TEST_PDF_URL: ${{ vars.PDFREST_TEST_PDF_URL }}
+          PDFREST_TEST_REDACTION_PDF_URL: ${{ vars.PDFREST_TEST_REDACTION_PDF_URL }}
+          PDFREST_TEST_IMAGE_URL: ${{ vars.PDFREST_TEST_IMAGE_URL }}
+          PDFREST_DIAGNOSTICS_DIR: ${{ runner.temp }}/pdfrest-diagnostics
+
+      - name: Write live-test summary
+        if: always()
+        run: >-
+          node scripts/integration/write-github-summary.mjs
+          --diagnostics "$RUNNER_TEMP/pdfrest-diagnostics"
+          --output "$GITHUB_STEP_SUMMARY"
+          --artifact-output "$RUNNER_TEMP/pdfrest-sanitized-diagnostics/diagnostics.json"
+        env:
+          LIVE_TEST_OUTCOME: ${{ steps.live-tests.outcome }}
+          LIVE_TEST_ARTIFACT_NAME: live-integration-diagnostics-${{ github.run_attempt }}
+          LIVE_TEST_ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: live-integration-diagnostics-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pdfrest-sanitized-diagnostics/diagnostics.json
+          if-no-files-found: warn
+          retention-days: 5
+
+  live-policy:
+    name: Live pdfRest integration policy
+    needs: static
+    if: >-
+      ${{
+        needs.static.result == 'success' &&
+        github.event_name == 'pull_request' &&
+        (
+          github.event.pull_request.head.repo.full_name != github.repository ||
+          github.event.pull_request.user.login == 'dependabot[bot]'
+        )
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Explain why live tests are not eligible
+        run: |
+          echo '### Live pdfRest integration not run' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This pull request cannot access the protected pdfRest test credential.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Static checks still cover the supported Node.js versions.' >> "$GITHUB_STEP_SUMMARY"

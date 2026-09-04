@@ -1,0 +1,147 @@
+{
+  "name": "Compress PDF files on demand via form upload",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup\nSelect a pdfRest credential and open the Form URL. The Form Ending node returns the compressed binary file directly. Low preserves more quality; High prioritizes a smaller file.",
+        "height": 240,
+        "width": 440,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -400
+      ],
+      "id": "2afe1658-8669-4f0f-af81-54b4ee4d519e",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "authentication": "none",
+        "formTitle": "Compress a PDF",
+        "formDescription": "Upload a PDF and choose a compression level.",
+        "formFields": {
+          "values": [
+            {
+              "fieldName": "data",
+              "fieldLabel": "PDF File",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            },
+            {
+              "fieldName": "compressionLevel",
+              "fieldLabel": "Compression Level",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "low"
+                  },
+                  {
+                    "option": "medium"
+                  },
+                  {
+                    "option": "high"
+                  }
+                ]
+              },
+              "defaultValue": "medium",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -560,
+        0
+      ],
+      "id": "af3bd5a0-c4ef-47d4-a38d-7bb48928704c",
+      "name": "Upload PDF Form",
+      "webhookId": "26378e03-858b-4922-aec2-c9d01d864d56"
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
+        "compressionLevel": "={{ $json.compressionLevel }}",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "7c29a911-c368-473a-a82a-1d6427aca625",
+      "name": "Compress PDF",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinary",
+        "completionTitle": "Your compressed PDF is ready",
+        "completionMessage": "Download the compressed file below.",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e5e15430-5f53-44d0-aa75-0d277617fc3f",
+      "name": "Return Compressed PDF"
+    }
+  ],
+  "connections": {
+    "Upload PDF Form": {
+      "main": [
+        [
+          {
+            "node": "Compress PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compress PDF": {
+      "main": [
+        [
+          {
+            "node": "Return Compressed PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}

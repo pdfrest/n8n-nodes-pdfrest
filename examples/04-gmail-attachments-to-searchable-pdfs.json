@@ -1,0 +1,146 @@
+{
+  "name": "Make emailed PDF attachments searchable and save to Google Drive",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Setup\nSelect Gmail, pdfRest, and Google Drive credentials, then replace the Searchable folder ID. This template processes the first attachment (`attachment_0`) from each matching email.\n\nTo process every attachment, add a Code or Split Out step that emits one item per binary attachment before OCR.",
+        "height": 300,
+        "width": 460,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -400
+      ],
+      "id": "660bcdbf-5215-434d-aa18-5fd9544e27a2",
+      "name": "Setup"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "event": "messageReceived",
+        "simple": false,
+        "maxResults": 10,
+        "filters": {
+          "q": "has:attachment filename:pdf",
+          "readStatus": "unread"
+        },
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -560,
+        0
+      ],
+      "id": "5e00ccd9-c8a8-418d-adbd-32dd104e1fc7",
+      "name": "Gmail Trigger",
+      "notes": "This example processes attachment_0 only. Add a Code or Split Out node to emit one item per attachment when every PDF attachment must be processed.",
+      "notesInFlow": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "ocr",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "attachment_0",
+        "downloadOutputFiles": true,
+        "outputFileDataFieldName": "data",
+        "options": {
+          "languages": [
+            "English"
+          ]
+        },
+        "requestOptions": {}
+      },
+      "type": "CUSTOM.pdfRest",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        0
+      ],
+      "id": "c5b5c6c1-106a-46ad-a70f-7ff7b9483a99",
+      "name": "OCR Email Attachment",
+      "credentials": {
+        "pdfRestApi": {
+          "id": "YOUR_PDFREST_CREDENTIAL_ID",
+          "name": "pdfRest account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ ($('Gmail Trigger').item.json.subject || 'searchable-email-attachment').replace(/[^a-zA-Z0-9 _-]/g, '') + '.pdf' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "YOUR_SEARCHABLE_FOLDER_ID",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6936ca76-9b14-4333-a7a3-4c9153f3ae5d",
+      "name": "Save Searchable PDF",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "OCR Email Attachment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR Email Attachment": {
+      "main": [
+        [
+          {
+            "node": "Save Searchable PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "nodeGroups": [],
+  "pinData": {}
+}
