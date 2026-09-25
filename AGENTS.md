@@ -79,7 +79,9 @@ not add a token fallback or publish locally.
   raw execution output or upload a raw diagnostics directory. Generate the job
   summary through an explicit allowlist. Upload a single `diagnostics.json`
   artifact whose error records contain only node, item index, HTTP status, safe
-  error classification, and value-free field metadata.
+  error classification, a fixed safe error code and message, and value-free
+  field metadata. Never copy arbitrary error messages or API responses into
+  the summary or artifact.
 - In GitHub Actions, install the pinned live-test toolchain before the pdfRest
   credential is available. Pass that toolchain to the credential-bearing step
   and invoke the live harness directly so the CI path does not run package
