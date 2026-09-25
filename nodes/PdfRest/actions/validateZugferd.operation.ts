@@ -14,7 +14,12 @@ export const validateZugferdOperation: INodePropertyOptions = createResourceIdOp
 export const validateZugferdDescription: INodeProperties[] = [
 	...createInputSourceFields({
 		operation: 'validateZugferd',
-		file: { deferUpload: true },
+		description: 'Choose the completed ZUGFeRD PDF file or its pdfRest resource ID to validate',
+		resourceIdDescription: 'The resource ID of the completed ZUGFeRD PDF to validate',
+		file: {
+			deferUpload: true,
+			description: 'The input field containing the completed ZUGFeRD PDF to validate',
+		},
 	}),
 	{
 		displayName: 'Optional Fields',

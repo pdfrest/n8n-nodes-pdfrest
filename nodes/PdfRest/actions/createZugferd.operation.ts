@@ -25,7 +25,7 @@ function createZugferdRequestPreSend(): PreSendAction {
 		const pdfSource = this.getNodeParameter('pdfInputType', 'none') as OptionalSource;
 		const logoSource = this.getNodeParameter('logoInputType', 'none') as OptionalSource;
 		for (const [source, fileKey, idKey, label] of [
-			[pdfSource, 'pdf_file', 'pdf_id', 'PDF Input Source'],
+			[pdfSource, 'pdf_file', 'pdf_id', 'Source PDF Input Source'],
 			[logoSource, 'logo_file', 'logo_id', 'Logo Input Source'],
 		] as const) {
 			if (source === 'none') {
@@ -82,6 +82,8 @@ export const createZugferdOperation: INodePropertyOptions = createResourceIdOper
 export const createZugferdDescription: INodeProperties[] = [
 	...createInputSourceFields({
 		operation: 'createZugferd',
+		description: 'Choose the required invoice XML file or its pdfRest resource ID',
+		resourceIdDescription: 'The resource ID of the invoice XML file',
 		file: {
 			deferUpload: true,
 			description: 'The input field containing the invoice XML file',
@@ -90,15 +92,18 @@ export const createZugferdDescription: INodeProperties[] = [
 	...createSecondaryFileInputSourceFields({
 		allowNone: true,
 		displayName: 'Source PDF Input Source',
+		description:
+			'Choose an existing visual invoice PDF to pair with the XML, or None to generate one from the XML',
 		operation: 'createZugferd',
 		inputTypeName: 'pdfInputType',
 		fileFieldName: 'pdf_file',
 		fileInputDataFieldName: 'pdfFileDataFieldName',
 		fileInputDataFieldDisplayName: 'Source PDF Input File Data Field Name',
+		fileInputDescription: 'The input field containing the existing visual invoice PDF',
 		resourceIdName: 'pdfResourceId',
 		resourceIdDisplayName: 'Source PDF Resource ID',
 		resourceIdBodyProperty: 'pdf_id',
-		resourceIdDescription: 'The resource ID of an existing source PDF',
+		resourceIdDescription: 'The resource ID of the existing visual invoice PDF',
 	}).map((field) =>
 		field.name === 'pdfInputType'
 			? { ...field, routing: { send: { preSend: [createZugferdRequestPreSend()] } } }
@@ -107,15 +112,17 @@ export const createZugferdDescription: INodeProperties[] = [
 	...createSecondaryFileInputSourceFields({
 		allowNone: true,
 		displayName: 'Logo Input Source',
+		description: 'Choose a PNG or JPEG logo for a generated or regenerated PDF, or None to omit it',
 		operation: 'createZugferd',
 		inputTypeName: 'logoInputType',
 		fileFieldName: 'logo_file',
 		fileInputDataFieldName: 'logoFileDataFieldName',
 		fileInputDataFieldDisplayName: 'Logo Input File Data Field Name',
+		fileInputDescription: 'The input field containing the PNG or JPEG logo',
 		resourceIdName: 'logoResourceId',
 		resourceIdDisplayName: 'Logo Resource ID',
 		resourceIdBodyProperty: 'logo_id',
-		resourceIdDescription: 'The resource ID of a PNG or JPEG logo',
+		resourceIdDescription: 'The resource ID of a previously uploaded PNG or JPEG logo',
 	}),
 	{
 		displayName: 'Optional Fields',
@@ -138,7 +145,8 @@ export const createZugferdDescription: INodeProperties[] = [
 				type: 'boolean',
 				default: false,
 				displayOptions: { show: { '/pdfInputType': ['inputFile', 'resourceId'] } },
-				description: 'Whether to regenerate the visual PDF if it cannot be matched to the XML',
+				description:
+				'Whether to generate a replacement visual PDF if the supplied PDF does not match the XML or cannot be fully confirmed',
 				routing: { send: { type: 'body', property: 'regenerate_pdf' } },
 			},
 			{
@@ -146,7 +154,8 @@ export const createZugferdDescription: INodeProperties[] = [
 				name: 'renderOptions',
 				type: 'json',
 				default: '{}',
-				description: 'Appearance and regional formatting options for a generated PDF',
+				description:
+				'A JSON object for generated PDF appearance, such as locale, label_language, font, and accent_color_rgb',
 				routing: { send: { type: 'body', property: 'render_options' } },
 			},
 		],

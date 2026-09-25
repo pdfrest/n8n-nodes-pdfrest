@@ -313,6 +313,7 @@ export const convertToPdfDescription: INodeProperties[] = [
 	},
 	...createInputSourceFields({
 		operation: 'convertToPdf',
+		description: 'Choose a file from this workflow, a pdfRest resource ID, or a publicly accessible URL',
 		sources: ['file', 'resourceId', 'url'],
 		file: { deferUpload: true },
 		url: { requestFormat: 'multipart' },
@@ -344,16 +345,19 @@ export const convertToPdfDescription: INodeProperties[] = [
 	...createSecondaryFileInputSourceFields({
 		allowNone: true,
 		displayName: 'Job Options Input Source',
+		description:
+			'Choose a .joboptions settings file or its pdfRest resource ID, or None to use default settings',
 		operation: 'convertToPdf',
 		show: { conversionType: ['postscript'], inputType: ['inputFile', 'resourceId'] },
 		inputTypeName: 'jobOptionsInputType',
 		fileFieldName: 'job_options',
 		fileInputDataFieldName: 'jobOptionsFileDataFieldName',
 		fileInputDataFieldDisplayName: 'Job Options Input File Data Field Name',
+		fileInputDescription: 'The input field containing the .joboptions settings file',
 		resourceIdName: 'jobOptionsResourceId',
 		resourceIdDisplayName: 'Job Options Resource ID',
 		resourceIdBodyProperty: 'job_options_id',
-		resourceIdDescription: 'The resource ID of a previously uploaded .joboptions profile',
+		resourceIdDescription: 'The resource ID of a previously uploaded .joboptions settings file',
 	}),
 	{
 		displayName: 'Optional Fields',

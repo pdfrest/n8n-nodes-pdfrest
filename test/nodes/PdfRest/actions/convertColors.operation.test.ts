@@ -265,11 +265,11 @@ describe('Convert PDF Colors operation', () => {
 		expect(responseRequest.headers).toEqual({ Accept: 'application/json' });
 	});
 
-	it('exposes custom profile file and resource-ID branches', () => {
+	it('exposes PDF and custom profile file and resource-ID branches', () => {
 		const definition = JSON.stringify(convertColorsDescription);
-		expect(definition).not.toContain('inputFileDataFieldName');
+		expect(definition).toContain('inputFileDataFieldName');
 		expect(definition).toContain('Profile Input Source');
-		expect(definition).not.toContain('"property":"file"');
+		expect(definition).toContain('"property":"file"');
 		expect(definition).toContain('"property":"profile"');
 
 		const bodyProperties = convertColorsDescription.flatMap((field) => [
@@ -280,6 +280,7 @@ describe('Convert PDF Colors operation', () => {
 		]);
 		expect(bodyProperties).toEqual([
 			'id',
+			'file',
 			'color_profile',
 			'profile_id',
 			'profile',

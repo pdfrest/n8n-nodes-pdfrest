@@ -7,7 +7,8 @@ import {
 } from 'n8n-workflow';
 import { createNonEmptyBodyStringField } from '../helpers/bodyFields';
 import { createIncludeFileInfoField } from '../helpers/headers';
-import { createResourceIdField, createResourceIdOperation } from '../helpers/resourceId';
+import { createInputSourceFields } from '../helpers/inputSource';
+import { createResourceIdOperation } from '../helpers/resourceId';
 
 function validateScale(): PreSendAction {
 	return async function validatePostscriptScale(
@@ -34,7 +35,15 @@ export const convertPostscriptOperation: INodePropertyOptions = createResourceId
 });
 
 export const convertPostscriptDescription: INodeProperties[] = [
-	createResourceIdField('convertPostscript'),
+	...createInputSourceFields({
+		operation: 'convertPostscript',
+		description: 'Choose a PDF from this workflow or a PDF already stored by pdfRest',
+		resourceIdDescription: 'The resource ID of the PDF to convert to PostScript',
+		file: {
+			deferUpload: true,
+			description: 'The input field containing the PDF to convert to PostScript',
+		},
+	}),
 	{
 		displayName: 'Optional Fields',
 		name: 'options',
@@ -48,7 +57,7 @@ export const convertPostscriptDescription: INodeProperties[] = [
 				name: 'binaryOutput',
 				type: 'boolean',
 				default: true,
-				description: 'Whether to allow binary data in the PostScript file',
+				description: 'Whether to use binary output instead of text-safe, 7-bit PostScript',
 				routing: { send: { type: 'body', property: 'binary_output' } },
 			},
 			createIncludeFileInfoField('convertPostscript'),
@@ -76,7 +85,7 @@ export const convertPostscriptDescription: INodeProperties[] = [
 					{ name: 'Level 3', value: 3 },
 				],
 				default: 3,
-				description: 'The PostScript language level for the generated file',
+				description: 'The PostScript language level required by the receiving printer or system',
 				routing: { send: { type: 'body', property: 'ps_level' } },
 			},
 			{
@@ -84,7 +93,7 @@ export const convertPostscriptDescription: INodeProperties[] = [
 				name: 'printAnnotations',
 				type: 'boolean',
 				default: true,
-				description: 'Whether to include printable PDF annotations',
+				description: 'Whether to include printable comments, markups, and other annotations',
 				routing: { send: { type: 'body', property: 'print_annotations' } },
 			},
 			{
@@ -92,7 +101,7 @@ export const convertPostscriptDescription: INodeProperties[] = [
 				name: 'rotate',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to allow page rotation in the PostScript file',
+				description: 'Whether to rotate pages in the generated PostScript output',
 				routing: { send: { type: 'body', property: 'rotate' } },
 			},
 			{
@@ -101,7 +110,8 @@ export const convertPostscriptDescription: INodeProperties[] = [
 				type: 'number',
 				typeOptions: { minValue: 0 },
 				default: 1,
-				description: 'The multiplier for page content size; must be greater than zero',
+				description:
+				'The page content size multiplier: 1 keeps the original size, below 1 shrinks it, and above 1 enlarges it',
 				routing: { send: { type: 'body', property: 'scale', preSend: [validateScale()] } },
 			},
 			{
@@ -109,7 +119,7 @@ export const convertPostscriptDescription: INodeProperties[] = [
 				name: 'shrinkToFit',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to shrink page content to fit the output page',
+				description: 'Whether to shrink oversized content to fit within the output page',
 				routing: { send: { type: 'body', property: 'shrink_to_fit' } },
 			},
 		],

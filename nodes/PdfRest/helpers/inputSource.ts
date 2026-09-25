@@ -27,18 +27,22 @@ interface UrlInputOptions {
 }
 
 interface InputSourceOptions {
+	description?: string;
 	file?: FileInputOptions;
 	operation: string;
+	resourceIdDescription?: string;
 	sources?: ['file', ...InputSource[]];
 	url?: UrlInputOptions;
 }
 
 interface SecondaryFileInputSourceOptions {
 	allowNone?: boolean;
+	description?: string;
 	displayName?: string;
 	fileFieldName: string;
 	fileInputDataFieldName: string;
 	fileInputDataFieldDisplayName: string;
+	fileInputDescription?: string;
 	inputTypeName: string;
 	operation: string;
 	resourceIdBodyProperty: string;
@@ -118,8 +122,10 @@ export function createInputFileFields({
  * pdfRest resource or upload binary files as multipart form data.
  */
 export function createInputSourceFields({
+	description,
 	file = {},
 	operation,
+	resourceIdDescription,
 	sources = ['file', 'resourceId'],
 	url = {},
 }: InputSourceOptions): INodeProperties[] {
@@ -189,13 +195,16 @@ export function createInputSourceFields({
 			noDataExpression: true,
 			options: inputTypeOptions,
 			default: 'inputFile',
+			...(description ? { description } : {}),
 			displayOptions: {
 				show: {
 					operation: [operation],
 				},
 			},
 		},
-		...(hasResourceIdInput ? [createResourceIdField(operation, { inputType: 'resourceId' })] : []),
+		...(hasResourceIdInput
+			? [createResourceIdField(operation, { inputType: 'resourceId', description: resourceIdDescription })]
+			: []),
 		...fileInputFields,
 		...urlInputFields,
 	];
@@ -204,10 +213,12 @@ export function createInputSourceFields({
 /** Creates a file-or-resource-ID selector for an auxiliary request file. */
 export function createSecondaryFileInputSourceFields({
 	allowNone = false,
+	description,
 	displayName = 'Input Source',
 	fileFieldName,
 	fileInputDataFieldName,
 	fileInputDataFieldDisplayName,
+	fileInputDescription,
 	inputTypeName,
 	operation,
 	resourceIdBodyProperty,
@@ -230,6 +241,7 @@ export function createSecondaryFileInputSourceFields({
 			],
 			default: 'inputFile',
 			...(allowNone ? { default: 'none' } : {}),
+			...(description ? { description } : {}),
 			displayOptions: { show: baseShow },
 		},
 		{
@@ -249,6 +261,7 @@ export function createSecondaryFileInputSourceFields({
 				fieldName: fileFieldName,
 				inputDataFieldName: fileInputDataFieldName,
 				inputDataFieldDisplayName: fileInputDataFieldDisplayName,
+				...(fileInputDescription ? { description: fileInputDescription } : {}),
 				deferUpload: true,
 			},
 		}).map((field) => ({
