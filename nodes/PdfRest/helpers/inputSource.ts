@@ -27,17 +27,22 @@ interface UrlInputOptions {
 }
 
 interface InputSourceOptions {
+	description?: string;
 	file?: FileInputOptions;
 	operation: string;
+	resourceIdDescription?: string;
 	sources?: ['file', ...InputSource[]];
 	url?: UrlInputOptions;
 }
 
 interface SecondaryFileInputSourceOptions {
+	allowNone?: boolean;
+	description?: string;
 	displayName?: string;
 	fileFieldName: string;
 	fileInputDataFieldName: string;
 	fileInputDataFieldDisplayName: string;
+	fileInputDescription?: string;
 	inputTypeName: string;
 	operation: string;
 	resourceIdBodyProperty: string;
@@ -117,8 +122,10 @@ export function createInputFileFields({
  * pdfRest resource or upload binary files as multipart form data.
  */
 export function createInputSourceFields({
+	description,
 	file = {},
 	operation,
+	resourceIdDescription,
 	sources = ['file', 'resourceId'],
 	url = {},
 }: InputSourceOptions): INodeProperties[] {
@@ -133,6 +140,13 @@ export function createInputSourceFields({
 	const hasFileInput = sources.includes('file');
 	const hasResourceIdInput = sources.includes('resourceId');
 	const hasUrlInput = sources.includes('url');
+	const inputSourceDescription = hasResourceIdInput
+		? hasUrlInput
+			? 'Choose a file from this workflow, one already stored by pdfRest, or a publicly accessible URL'
+			: 'Choose a file from this workflow or one already stored by pdfRest'
+		: hasUrlInput
+			? 'Choose a file from this workflow or a publicly accessible URL'
+			: 'Choose a file from this workflow';
 	const sourceOptions: Record<InputSource, { name: string; value: string }> = {
 		file: { name: 'Input File', value: 'inputFile' },
 		resourceId: { name: 'Resource ID', value: 'resourceId' },
@@ -188,13 +202,16 @@ export function createInputSourceFields({
 			noDataExpression: true,
 			options: inputTypeOptions,
 			default: 'inputFile',
+			description: description ?? inputSourceDescription,
 			displayOptions: {
 				show: {
 					operation: [operation],
 				},
 			},
 		},
-		...(hasResourceIdInput ? [createResourceIdField(operation, { inputType: 'resourceId' })] : []),
+		...(hasResourceIdInput
+			? [createResourceIdField(operation, { inputType: 'resourceId', description: resourceIdDescription })]
+			: []),
 		...fileInputFields,
 		...urlInputFields,
 	];
@@ -202,10 +219,13 @@ export function createInputSourceFields({
 
 /** Creates a file-or-resource-ID selector for an auxiliary request file. */
 export function createSecondaryFileInputSourceFields({
+	allowNone = false,
+	description,
 	displayName = 'Input Source',
 	fileFieldName,
 	fileInputDataFieldName,
 	fileInputDataFieldDisplayName,
+	fileInputDescription,
 	inputTypeName,
 	operation,
 	resourceIdBodyProperty,
@@ -222,10 +242,14 @@ export function createSecondaryFileInputSourceFields({
 			type: 'options',
 			noDataExpression: true,
 			options: [
+				...(allowNone ? [{ name: 'None', value: 'none' }] : []),
 				{ name: 'Input File', value: 'inputFile' },
 				{ name: 'Resource ID', value: 'resourceId' },
 			],
 			default: 'inputFile',
+			...(allowNone ? { default: 'none' } : {}),
+			description:
+				description ?? 'Choose a file from this workflow or one already stored by pdfRest',
 			displayOptions: { show: baseShow },
 		},
 		{
@@ -245,6 +269,7 @@ export function createSecondaryFileInputSourceFields({
 				fieldName: fileFieldName,
 				inputDataFieldName: fileInputDataFieldName,
 				inputDataFieldDisplayName: fileInputDataFieldDisplayName,
+				...(fileInputDescription ? { description: fileInputDescription } : {}),
 				deferUpload: true,
 			},
 		}).map((field) => ({

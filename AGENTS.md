@@ -79,7 +79,9 @@ not add a token fallback or publish locally.
   raw execution output or upload a raw diagnostics directory. Generate the job
   summary through an explicit allowlist. Upload a single `diagnostics.json`
   artifact whose error records contain only node, item index, HTTP status, safe
-  error classification, and value-free field metadata.
+  error classification, a fixed safe error code and message, and value-free
+  field metadata. Never copy arbitrary error messages or API responses into
+  the summary or artifact.
 - In GitHub Actions, install the pinned live-test toolchain before the pdfRest
   credential is available. Pass that toolchain to the credential-bearing step
   and invoke the live harness directly so the CI path does not run package
@@ -125,6 +127,10 @@ not add a token fallback or publish locally.
   If the specification moves behind an API, update this documented source or
   its documented discovery mechanism. Do not select the source through an
   environment variable.
+- Record the OpenAPI revision reviewed for the node in the root
+  `.pdfrest-openapi-version` file. Update it when reviewing a newer revision
+  and describe any known unimplemented API features in the pull request. The
+  recorded revision is a review baseline, not a completeness claim.
 - Keep credentials, nodes, build output registrations, package metadata, and
   documentation synchronized as the starter examples are replaced.
 - Use Vitest for unit and API-contract tests. Cover pure helper behavior and

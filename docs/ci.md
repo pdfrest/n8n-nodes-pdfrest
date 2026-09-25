@@ -117,6 +117,13 @@ it.
 
 The account should have enough quota for both all-endpoint workflows on every
 same-repository pull request, `develop` push, manual run, and release.
+Both workflows exercise PDF to PostScript conversion. The JSON upload workflow
+passes an uploaded PDF's resource ID to the conversion node; the multipart
+workflow passes a PDF read from disk directly to that node. The multipart
+workflow creates a ZUGFeRD PDF from the committed invoice XML fixture and
+validates the generated PDF. The validation branch fails if the response status
+is anything other than `VALID`, even when the API returns HTTP 200. The JSON
+upload workflow uses no Read/Write Files from Disk nodes.
 Monitor usage in pdfRest and rotate the key through the GitHub environment
 rather than changing repository files.
 
@@ -175,9 +182,13 @@ workflow schema, file paths, or URLs are unexpected.
 Every live job writes a Markdown result to the GitHub Actions job summary. It
 lists both workflows, their completion status, and an allowlisted diagnostic
 record for each extracted failure: node, item index, HTTP status, safe error
-classification, and value-free field metadata. Free-form error messages,
-response bodies, request context, and causes are excluded because they may
-contain authenticated headers or customer-controlled values.
+classification, a fixed safe error code and message, and value-free field
+metadata. The error code uses the HTTP status when available and otherwise
+identifies a recognized node or workflow failure. Messages come from a fixed
+allowlist; unknown errors receive a generic explanation. Free-form error
+messages, response bodies, request context, and causes are excluded because
+they may contain authenticated headers or customer-controlled values.
+On failure, the same sanitized summary is printed to the CI step log.
 
 Request diagnostics are disabled during ordinary node execution. The renderer
 enables them only in the temporary CI workflow copies, where n8n's debug logger
@@ -192,8 +203,9 @@ temporary diagnostics directory. The harness never prints raw execution output
 to the Actions log. The summary step parses the raw files locally, writes a
 separate sanitized `diagnostics.json`, and both CI workflows upload that file by
 its exact path for five days on failure. Each artifact error record contains
-only node, item index, HTTP status, safe classification, and value-free field
-metadata. The workflows never upload the raw diagnostics directory.
+only node, item index, HTTP status, safe classification, fixed safe error code
+and message, and value-free field metadata. The workflows never upload the raw
+diagnostics directory.
 Secret-bearing bootstrap files remain outside both diagnostics locations and
 are deleted before the job exits.
 
