@@ -2827,47 +2827,9 @@
     },
     {
       "parameters": {
-        "operation": "upload",
-        "options": {
-          "includeFileInfo": false
-        },
-        "requestOptions": {}
-      },
-      "type": "CUSTOM.pdfRest",
-      "typeVersion": 1,
-      "position": [
-        -912,
-        12544
-      ],
-      "id": "507c6dac-d585-4311-915e-b2c976478dc9",
-      "name": "Upload PDF for PostScript",
-      "credentials": {
-        "pdfRestApi": {
-          "id": "ON04bE7YVBE2OCC6",
-          "name": "pdfRest account"
-        }
-      },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "={{ { error: { node: $prevNode.name, details: { name: $input.item.error?.name, message: $input.item.error?.message, description: $input.item.error?.description, httpCode: $input.item.error?.httpCode, itemIndex: $itemIndex, responseMessage: typeof $input.item.error?.context?.data?.error === 'string' ? $input.item.error.context.data.error : undefined } } } }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        -688,
-        12736
-      ],
-      "id": "ead0dc6e-308d-4093-af1f-c4957e486386",
-      "name": "Record Upload PDF for PostScript Error"
-    },
-    {
-      "parameters": {
         "operation": "convertPostscript",
-        "resourceId": "={{ $json.files[0].id }}",
+        "inputType": "inputFile",
+        "inputFileDataFieldName": "data",
         "options": {
           "includeFileInfo": false
         },
@@ -5226,24 +5188,6 @@
       "main": [
         [
           {
-            "node": "Upload PDF for PostScript",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Record Read PDF for PostScript Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upload PDF for PostScript": {
-      "main": [
-        [
-          {
             "node": "Convert PDF to PostScript",
             "type": "main",
             "index": 0
@@ -5251,7 +5195,7 @@
         ],
         [
           {
-            "node": "Record Upload PDF for PostScript Error",
+            "node": "Record Read PDF for PostScript Error",
             "type": "main",
             "index": 0
           }
@@ -5277,17 +5221,6 @@
       ]
     },
     "Record Read PDF for PostScript Error": {
-      "main": [
-        [
-          {
-            "node": "Merge Single-Input Results 4",
-            "type": "main",
-            "index": 3
-          }
-        ]
-      ]
-    },
-    "Record Upload PDF for PostScript Error": {
       "main": [
         [
           {

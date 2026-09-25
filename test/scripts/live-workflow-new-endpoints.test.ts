@@ -33,12 +33,9 @@ function connects(workflow: Workflow, source: string, target: string, output = 0
 }
 
 describe.each(workflows)('%s live workflow', (_, workflow, merge, postscriptInput) => {
-	it('converts a PDF resource to PostScript and reports the branch outcome', () => {
+	it('converts a PDF to PostScript and reports the branch outcome', () => {
 		const conversion = node(workflow, 'Convert PDF to PostScript');
-		expect(conversion.parameters).toMatchObject({
-			operation: 'convertPostscript',
-			resourceId: '={{ $json.files[0].id }}',
-		});
+		expect(conversion.parameters.operation).toBe('convertPostscript');
 		expect(conversion.onError).toBe('continueErrorOutput');
 		connects(workflow, 'Convert PDF to PostScript', 'Record Convert PDF to PostScript Result');
 		connects(workflow, 'Convert PDF to PostScript', 'Record Convert PDF to PostScript Result', 1);
@@ -47,6 +44,15 @@ describe.each(workflows)('%s live workflow', (_, workflow, merge, postscriptInpu
 });
 
 describe('resource ID live workflow', () => {
+	it('selects the uploaded PDF resource for PostScript conversion', () => {
+		const parameters = node(jsonWorkflow as Workflow, 'Convert PDF to PostScript').parameters;
+		expect(parameters).toMatchObject({
+			inputType: 'resourceId',
+			resourceId: '={{ $json.files[0].id }}',
+		});
+		expect(parameters.inputFileDataFieldName).toBeUndefined();
+	});
+
 	it('uses no disk file nodes or ZUGFeRD operations', () => {
 		const workflow = jsonWorkflow as Workflow;
 		expect(workflow.nodes.some((entry) => entry.type === 'n8n-nodes-base.readWriteFile')).toBe(false);
@@ -59,12 +65,17 @@ describe('resource ID live workflow', () => {
 });
 
 describe('multipart live workflow', () => {
-	it('uploads a PDF for PostScript', () => {
+	it('passes the read PDF directly to PostScript conversion', () => {
 		const workflow = multipartWorkflow as Workflow;
-		connects(workflow, 'Read PDF for PostScript', 'Upload PDF for PostScript');
-		connects(workflow, 'Upload PDF for PostScript', 'Convert PDF to PostScript');
+		const parameters = node(workflow, 'Convert PDF to PostScript').parameters;
+		expect(parameters).toMatchObject({
+			inputType: 'inputFile',
+			inputFileDataFieldName: 'data',
+		});
+		expect(parameters.resourceId).toBeUndefined();
+		expect(workflow.nodes.some((entry) => entry.name === 'Upload PDF for PostScript')).toBe(false);
+		connects(workflow, 'Read PDF for PostScript', 'Convert PDF to PostScript');
 		connects(workflow, 'Record Read PDF for PostScript Error', 'Merge Single-Input Results 4', 0, 3);
-		connects(workflow, 'Record Upload PDF for PostScript Error', 'Merge Single-Input Results 4', 0, 3);
 	});
 
 	it('creates an invoice PDF and validates its output ID', () => {

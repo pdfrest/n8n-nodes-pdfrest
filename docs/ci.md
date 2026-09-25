@@ -117,11 +117,13 @@ it.
 
 The account should have enough quota for both all-endpoint workflows on every
 same-repository pull request, `develop` push, manual run, and release.
-Both workflows exercise PDF to PostScript conversion. The multipart workflow
-creates a ZUGFeRD PDF from the committed invoice XML fixture and validates the
-generated PDF. The validation branch fails if the response status is anything
-other than `VALID`, even when the API returns HTTP 200. The JSON upload workflow
-uses no Read/Write Files from Disk nodes.
+Both workflows exercise PDF to PostScript conversion. The JSON upload workflow
+passes an uploaded PDF's resource ID to the conversion node; the multipart
+workflow passes a PDF read from disk directly to that node. The multipart
+workflow creates a ZUGFeRD PDF from the committed invoice XML fixture and
+validates the generated PDF. The validation branch fails if the response status
+is anything other than `VALID`, even when the API returns HTTP 200. The JSON
+upload workflow uses no Read/Write Files from Disk nodes.
 Monitor usage in pdfRest and rotate the key through the GitHub environment
 rather than changing repository files.
 

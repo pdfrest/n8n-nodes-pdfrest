@@ -3400,6 +3400,7 @@
     {
       "parameters": {
         "operation": "convertPostscript",
+        "inputType": "resourceId",
         "resourceId": "={{ $json.files[0].id }}",
         "options": {
           "includeFileInfo": false
