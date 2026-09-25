@@ -299,6 +299,7 @@ export const signDescription: INodeProperties[] = [
 	},
 	...createSecondaryFileInputSourceFields({
 		displayName: 'PFX Credential Input Source',
+		description: 'Choose a PFX signing credential from this workflow or one already stored by pdfRest',
 		operation: 'sign',
 		show: { credentialType: ['pfx'] },
 		inputTypeName: 'pfxCredentialInputType',
@@ -312,6 +313,7 @@ export const signDescription: INodeProperties[] = [
 	}),
 	...createSecondaryFileInputSourceFields({
 		displayName: 'PFX Passphrase Input Source',
+		description: 'Choose a PFX passphrase text file from this workflow or one already stored by pdfRest',
 		operation: 'sign',
 		show: { credentialType: ['pfx'] },
 		inputTypeName: 'pfxPassphraseInputType',
@@ -325,6 +327,7 @@ export const signDescription: INodeProperties[] = [
 	}),
 	...createSecondaryFileInputSourceFields({
 		displayName: 'Certificate Input Source',
+		description: 'Choose a signing certificate from this workflow or one already stored by pdfRest',
 		operation: 'sign',
 		show: { credentialType: ['certificate'] },
 		inputTypeName: 'certificateInputType',
@@ -338,6 +341,7 @@ export const signDescription: INodeProperties[] = [
 	}),
 	...createSecondaryFileInputSourceFields({
 		displayName: 'Private Key Input Source',
+		description: 'Choose a signing private key from this workflow or one already stored by pdfRest',
 		operation: 'sign',
 		show: { credentialType: ['certificate'] },
 		inputTypeName: 'privateKeyInputType',

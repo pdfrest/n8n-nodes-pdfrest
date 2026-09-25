@@ -140,6 +140,13 @@ export function createInputSourceFields({
 	const hasFileInput = sources.includes('file');
 	const hasResourceIdInput = sources.includes('resourceId');
 	const hasUrlInput = sources.includes('url');
+	const inputSourceDescription = hasResourceIdInput
+		? hasUrlInput
+			? 'Choose a file from this workflow, one already stored by pdfRest, or a publicly accessible URL'
+			: 'Choose a file from this workflow or one already stored by pdfRest'
+		: hasUrlInput
+			? 'Choose a file from this workflow or a publicly accessible URL'
+			: 'Choose a file from this workflow';
 	const sourceOptions: Record<InputSource, { name: string; value: string }> = {
 		file: { name: 'Input File', value: 'inputFile' },
 		resourceId: { name: 'Resource ID', value: 'resourceId' },
@@ -195,7 +202,7 @@ export function createInputSourceFields({
 			noDataExpression: true,
 			options: inputTypeOptions,
 			default: 'inputFile',
-			...(description ? { description } : {}),
+			description: description ?? inputSourceDescription,
 			displayOptions: {
 				show: {
 					operation: [operation],
@@ -241,7 +248,8 @@ export function createSecondaryFileInputSourceFields({
 			],
 			default: 'inputFile',
 			...(allowNone ? { default: 'none' } : {}),
-			...(description ? { description } : {}),
+			description:
+				description ?? 'Choose a file from this workflow or one already stored by pdfRest',
 			displayOptions: { show: baseShow },
 		},
 		{
